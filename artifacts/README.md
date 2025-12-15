@@ -13,7 +13,7 @@ Extract every rule section from the homeowner rules manual.
 ### **How a human finds the answer (short version)**
 
 1. Open the PDF in Folder 2:
-   **(215066178-180449602)-CT Legacy Homeowner Rules…v3.pdf**
+   **artifacts/1/(215066178-180449602)-CT Legacy Homeowner Rules eff 04.01.24 mu to MAPS Homeowner Rules eff 8.18.25 v3.pdf**
 2. Scan **pages 3–62**, where all rule headers are listed.
 3. Write down each labeled rule or subsection title.
 4. Combine them into a complete bullet list.
