@@ -6,6 +6,7 @@ Provides specialized tools for a ReAct agent to answer questions about insurance
 
 from typing import List, Dict, Any, Optional
 from pdf_parsers import RulesManualParser, RatePagesParser, TextChunk, TableData
+from cache_manager import CacheManager
 import re
 import os
 
@@ -13,27 +14,45 @@ import os
 class PDFToolkit:
     """Collection of tools for the agent to interact with PDF data"""
 
-    def __init__(self, pdfs_folder: str):
+    def __init__(self, pdfs_folder: str, use_cache: bool = True):
         """
         Initialize the toolkit with PDFs from a folder.
 
         Args:
             pdfs_folder: Path to folder containing PDFs
+            use_cache: Whether to use caching (default: True)
         """
         self.pdfs_folder = pdfs_folder
+        self.use_cache = use_cache
         self._rules_chunks: Optional[List[TextChunk]] = None
         self._rate_chunks: Optional[List[TextChunk]] = None
         self._tables: Optional[List[TableData]] = None
+
+        # Initialize cache manager
+        self.cache_manager = CacheManager() if use_cache else None
 
         # Initialize parsers
         self._initialize_parsers()
 
     def _initialize_parsers(self):
-        """Find and parse PDFs in the folder"""
+        """Find and parse PDFs in the folder, using cache if available"""
+        # Try to load from cache first
+        if self.cache_manager:
+            cached_data = self.cache_manager.load(self.pdfs_folder)
+            if cached_data:
+                self._rules_chunks, self._rate_chunks, self._tables = cached_data
+                print(f"[PDFToolkit] Loaded {len(self._rules_chunks or [])} rule chunks, "
+                      f"{len(self._rate_chunks or [])} rate chunks, "
+                      f"{len(self._tables or [])} tables from cache")
+                return
+
+        # Cache miss - parse PDFs
+        print(f"[PDFToolkit] Parsing PDFs from {self.pdfs_folder}...")
         pdf_files = [f for f in os.listdir(self.pdfs_folder) if f.endswith('.pdf')]
 
         for pdf_file in pdf_files:
             pdf_path = os.path.join(self.pdfs_folder, pdf_file)
+            print(f"[PDFToolkit] Parsing {pdf_file}...")
 
             # Determine document type and parse
             if 'Rules' in pdf_file or 'Manual' in pdf_file:
@@ -53,6 +72,19 @@ class PDFToolkit:
 
                 self._rate_chunks.extend(text_chunks)
                 self._tables.extend(tables)
+
+        # Save to cache
+        if self.cache_manager:
+            self.cache_manager.save(
+                self.pdfs_folder,
+                self._rules_chunks or [],
+                self._rate_chunks or [],
+                self._tables or []
+            )
+
+        print(f"[PDFToolkit] Parsed {len(self._rules_chunks or [])} rule chunks, "
+              f"{len(self._rate_chunks or [])} rate chunks, "
+              f"{len(self._tables or [])} tables")
 
     def search_rules(self, query: str, part_filter: Optional[str] = None,
                      top_k: int = 5) -> str:
