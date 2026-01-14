@@ -1,0 +1,14 @@
+{
+  "config_name": "enhanced_hints",
+  "total_questions": 7,
+  "correct": 4,
+  "incorrect": 3,
+  "accuracy": 0.5714285714285714,
+  "dev_accuracy": 0.5,
+  "val_accuracy": 0.6,
+  "holdout_accuracy": 0.0,
+  "avg_iterations": 3.857142857142857,
+  "avg_tool_calls": 3.2857142857142856,
+  "avg_latency": 106.1055008343288,
+  "generalization_score": 0.6
+}

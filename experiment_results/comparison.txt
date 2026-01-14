@@ -1,0 +1,18 @@
+========================================================================================================================
+VARIATION COMPARISON
+========================================================================================================================
+Variation                      Dev      Val      Hold     Gen      Iter     Time     Rec  
+------------------------------------------------------------------------------------------------------------------------
+baseline                       50%      60%      N/A      0.60     4.0      40.1s    ✗    
+increased_iterations           0%       40%      N/A      0.00     6.3      120.8s   ✗    
+enhanced_hints                 50%      60%      N/A      0.60     3.9      106.1s   ✗    
+========================================================================================================================
+
+Legend:
+  Dev  = Development accuracy (Q1, Q2)
+  Val  = Validation accuracy (VAL_Q1-Q5)
+  Hold = Hold-out accuracy (HOLD_Q1-Q3)
+  Gen  = Generalization score ((Val+Hold)/2 / Dev)
+  Iter = Average iterations
+  Time = Average latency
+  Rec  = Recommended (✓ if Dev=100%, Val≥80%, Gen≥0.8)

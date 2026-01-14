@@ -1,0 +1,14 @@
+{
+  "config_name": "increased_iterations",
+  "total_questions": 7,
+  "correct": 2,
+  "incorrect": 5,
+  "accuracy": 0.2857142857142857,
+  "dev_accuracy": 0.0,
+  "val_accuracy": 0.4,
+  "holdout_accuracy": 0.0,
+  "avg_iterations": 6.285714285714286,
+  "avg_tool_calls": 6.0,
+  "avg_latency": 120.82445154871259,
+  "generalization_score": 0.0
+}

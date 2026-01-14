@@ -1,0 +1,14 @@
+{
+  "config_name": "baseline",
+  "total_questions": 7,
+  "correct": 4,
+  "incorrect": 3,
+  "accuracy": 0.5714285714285714,
+  "dev_accuracy": 0.5,
+  "val_accuracy": 0.6,
+  "holdout_accuracy": 0.0,
+  "avg_iterations": 4.0,
+  "avg_tool_calls": 3.4285714285714284,
+  "avg_latency": 40.08339364188058,
+  "generalization_score": 0.6
+}
