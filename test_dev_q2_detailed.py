@@ -99,7 +99,9 @@ Example for Hurricane Premium:
 4. Query the CORRECT table (the one with 1329 rows, Coverage A Limit, and Applicable Hurricane Deductible columns)
    - Use the exact exhibit name and page from search results
    - Match: Policy Form, Coverage A Limit, Applicable Hurricane Deductible to find the factor
-5. Calculate: Base Rate × Hurricane Deductible Factor"""
+5. Calculate: Base Rate × Hurricane Deductible Factor
+
+For calculations: Always end your response with the final numerical answer on the last line (e.g., "The unadjusted Hurricane premium is $XXX")"""
 
     messages = [{"role": "user", "content": question}]
 

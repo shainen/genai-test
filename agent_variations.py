@@ -269,15 +269,42 @@ def run_agent_with_config(question: str, config: ExperimentConfig) -> tuple[str,
 # VARIATION DEFINITIONS
 # ============================================================================
 
-# Baseline: Current implementation
-BASELINE = ExperimentConfig(
-    name="baseline",
-    description="Current implementation with find_part_by_description tool",
+# Variation 1: Minimal guidance (least specific)
+MINIMAL = ExperimentConfig(
+    name="minimal",
+    description="Minimal prompt with basic instructions only",
     system_prompt="""You are an insurance document analysis assistant. Answer questions using the available tools.
 
 Important instructions:
-- When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
-- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
+- When asked about specific types of rules, use find_part_by_description to determine which PART to search
+- When searching for tables, use 1-2 word searches ONLY (e.g., "hurricane", "base rate")
+- When asked to list items, format as a bulleted list using asterisks (*)
+- For calculations: Always end your response with the final numerical answer on the last line
+
+Answer questions completely and accurately.""",
+    model="claude-sonnet-4-20250514",
+    max_iterations=10,
+    temperature=1.0,
+    specificity_level=3,  # Most general
+    assumptions=[
+        "Documents are organized into PARTs",
+        "Tables are in numbered exhibits"
+    ],
+    expected_fragility=[
+        "May struggle with complex multi-hop reasoning",
+        "May not know domain-specific patterns"
+    ]
+)
+
+# Variation 2: Moderate guidance (medium specificity)
+MODERATE = ExperimentConfig(
+    name="moderate",
+    description="Moderate prompt with formula guidance",
+    system_prompt="""You are an insurance document analysis assistant. Answer questions using the available tools.
+
+Important instructions:
+- When asked about specific types of rules (e.g., "rating plan rules"), use find_part_by_description FIRST to determine which PART letter to use
+- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name
 - When searching for tables: Use 1-2 word searches ONLY. Search "hurricane" for hurricane rates, "hurricane deductible" for deductible factors. Do NOT add extra keywords.
 - For calculating premiums: X Premium = Base Rate × Mandatory X Deductible Factor
   1. Base Rate: Search "base rate", extract rate for the peril
@@ -285,79 +312,82 @@ Important instructions:
   3. If deductible % not given but location mentioned (coastal areas), try 2%
 - Always cite specific rule numbers and page numbers when referencing rules
 - If asked to list items, format as a bulleted list using asterisks (*)
+- For calculations: Always end your response with the final numerical answer on the last line (e.g., "The answer is $XXX")
 
 Answer questions completely and accurately.""",
     model="claude-sonnet-4-20250514",
     max_iterations=10,
     temperature=1.0,
-    specificity_level=3,  # General - no hardcoded knowledge
+    specificity_level=2,  # Medium
     assumptions=[
         "Documents are organized into PARTs with descriptive names",
         "Tables are in numbered exhibits",
         "Calculations follow base_rate × factor pattern"
     ],
     expected_fragility=[
-        "May fail if document structure changes (no PARTs)",
-        "May struggle with complex multi-hop reasoning requiring >10 iterations"
+        "May struggle with edge cases not covered in guidance",
+        "May fail with >10 iterations needed"
     ]
 )
 
-# Variation 1: Increased iterations
-INCREASED_ITERATIONS = ExperimentConfig(
-    name="increased_iterations",
-    description="Same as baseline but with 15 max iterations (vs 10)",
-    system_prompt=BASELINE.system_prompt,
-    model="claude-sonnet-4-20250514",
-    max_iterations=15,  # Increased from 10
-    temperature=1.0,
-    specificity_level=3,
-    assumptions=BASELINE.assumptions,
-    expected_fragility=BASELINE.expected_fragility + ["Slower due to more iterations"]
-)
+# Variation 3: Detailed guidance (most specific)
+DETAILED = ExperimentConfig(
+    name="detailed",
+    description="Detailed prompt with step-by-step instructions (from test_dev_q2_detailed.py)",
+    system_prompt="""You are an insurance document analysis assistant.
 
-# Variation 2: Enhanced prompt with exhibit hints
-ENHANCED_HINTS = ExperimentConfig(
-    name="enhanced_hints",
-    description="Baseline + general hints about exhibit structure",
-    system_prompt="""You are an insurance document analysis assistant. Answer questions using the available tools.
+When searching for tables: Use 1-2 word searches ONLY. For hurricane rates, search "hurricane". For deductibles, search "hurricane deductible". Do NOT add policy details, coverage limits, or location terms to your search.
 
-Important instructions:
-- When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
-- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
-- When looking for tables: Use find_table_by_description to search by content description (e.g., "hurricane deductible factor", "base rates"). This is BETTER than guessing exhibit numbers! Focus on core keywords (avoid extra adjectives like "mandatory" or "applicable")
-- When calculating premiums, use this formula: X Premium = Base Rate × Mandatory X Deductible Factor
-  Where:
-  1. Base Rate: Search for "base rate", extract the rate for the specific peril (e.g., Hurricane = $293)
-  2. Mandatory X Deductible Factor: Search for "X deductible" (e.g., "hurricane deductible")
-     - You need: Policy Form, Coverage A Limit, and Applicable X Deductible %
-     - If deductible % not given but location mentioned (e.g., "coastal"), check rules for requirements, then try 2% (common for coastal areas)
-     - Look for table with 1000+ rows showing different deductible percentages
-  3. Calculate: Base Rate × Deductible Factor
-- Always cite specific rule numbers and page numbers when referencing rules
-- For table lookups, be precise with search criteria (match exact column names and values)
-- If asked to list items, format as a bulleted list using asterisks (*)
+For calculating premiums, use this formula:
+  X Premium = Base Rate × Mandatory X Deductible Factor
 
-Answer questions completely and accurately.""",
+Where:
+- Base Rate: Found in rate table "Base Rates" (search for "base rate")
+- Mandatory X Deductible Factor: Found in rate table "X Deductible Factor" (e.g., "Hurricane Deductible Factor")
+  - To find the correct row, you need: Policy Form, Coverage A Limit, and Applicable X Deductible
+  - If Applicable X Deductible is not given directly, search rules for "X Deductibles" to find how to determine it
+
+Example for Hurricane Premium:
+1. Search for "base rate" to find Base Rates table, extract Hurricane base rate
+2. Determine Applicable Hurricane Deductible:
+   - If percentage given directly (e.g., "2% deductible"), use that
+   - If only location given (e.g., "Coastline Neighborhood 3,000 feet from coast"):
+     a. Search rules for "hurricane deductibles" to understand requirements
+     b. If rules mention "mandatory hurricane deductible for coastal locations" but don't specify percentage:
+        - Try querying the Hurricane Deductible Factor table with 2% (common for coastal)
+        - The factor table has rows for different deductible % - find the row matching your Policy Form + Coverage A + deductible %
+3. Search for "hurricane deductible" to find Hurricane Deductible Factor table
+   - Important: Use the search results to identify which Exhibit # and page has the table with Coverage A Limit column (will show 1329 rows)
+   - Multiple exhibits may have same number but different content on different pages
+4. Query the CORRECT table (the one with 1329 rows, Coverage A Limit, and Applicable Hurricane Deductible columns)
+   - Use the exact exhibit name and page from search results
+   - Match: Policy Form, Coverage A Limit, Applicable Hurricane Deductible to find the factor
+5. Calculate: Base Rate × Hurricane Deductible Factor
+
+For calculations: Always end your response with the final numerical answer on the last line (e.g., "The unadjusted Hurricane premium is $XXX")""",
     model="claude-sonnet-4-20250514",
     max_iterations=10,
     temperature=1.0,
-    specificity_level=2,  # Semi-specific - has domain hints
-    assumptions=BASELINE.assumptions + [
-        "Base rates typically in early exhibits",
-        "Factors typically in later exhibits"
+    specificity_level=1,  # Most specific
+    assumptions=[
+        "Base rates in 'Base Rates' table",
+        "Deductible factors in 'X Deductible Factor' tables",
+        "Coastal areas typically use 2% hurricane deductible",
+        "Hurricane deductible table has 1329 rows"
     ],
-    expected_fragility=BASELINE.expected_fragility + [
-        "May fail if exhibits are numbered differently",
-        "Relies on typical document organization patterns"
+    expected_fragility=[
+        "Highly specific to current document structure",
+        "May fail if table names, row counts, or percentages change",
+        "Hardcoded knowledge about 2% coastal deductible and 1329 rows"
     ]
 )
 
 
 # Get all variations
 ALL_VARIATIONS = [
-    BASELINE,
-    INCREASED_ITERATIONS,
-    ENHANCED_HINTS
+    MINIMAL,
+    MODERATE,
+    DETAILED
 ]
 
 

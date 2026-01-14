@@ -1,0 +1,14 @@
+{
+  "config_name": "detailed",
+  "total_questions": 7,
+  "correct": 4,
+  "incorrect": 3,
+  "accuracy": 0.5714285714285714,
+  "dev_accuracy": 0.5,
+  "val_accuracy": 0.6,
+  "holdout_accuracy": 0.0,
+  "avg_iterations": 5.142857142857143,
+  "avg_tool_calls": 4.285714285714286,
+  "avg_latency": 38.341643060956685,
+  "generalization_score": 0.6
+}

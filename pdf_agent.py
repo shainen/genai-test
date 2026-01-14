@@ -181,6 +181,7 @@ Important instructions:
 - Always cite specific rule numbers and page numbers when referencing rules
 - For table lookups, be precise with search criteria
 - If asked to list items, format as a bulleted list using asterisks (*)
+- For calculations: Always end your response with the final numerical answer on the last line
 
 Answer questions completely and accurately."""
 
