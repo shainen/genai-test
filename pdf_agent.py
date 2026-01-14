@@ -39,6 +39,20 @@ def answer_pdf_question(question: str, pdfs_folder: str,
     # Define tools for Claude
     tools = [
         {
+            "name": "find_part_by_description",
+            "description": "Find which PART letter corresponds to a description. Use this FIRST when you need to identify which section of the manual contains certain types of rules (e.g., 'rating plan', 'general rules', 'optional coverages'). The documents are organized into PARTs (A, B, C, etc.), and each PART has a descriptive name.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Description of the section to find (e.g., 'rating plan', 'general rules', 'optional coverages')"
+                    }
+                },
+                "required": ["description"]
+            }
+        },
+        {
             "name": "search_rules",
             "description": "Search for rules matching a query. Useful for finding specific rules about topics like 'hurricane deductible', 'distance to coast', 'protection class', etc.",
             "input_schema": {
@@ -50,7 +64,7 @@ def answer_pdf_question(question: str, pdfs_folder: str,
                     },
                     "part_filter": {
                         "type": "string",
-                        "description": "Optional PART letter to filter by (e.g., 'C' for Rating Plan)"
+                        "description": "Optional PART letter to filter by (e.g., 'C'). Use find_part_by_description first to determine the correct PART letter."
                     },
                     "top_k": {
                         "type": "integer",
@@ -68,7 +82,7 @@ def answer_pdf_question(question: str, pdfs_folder: str,
                 "properties": {
                     "part_filter": {
                         "type": "string",
-                        "description": "Optional PART letter to filter by (e.g., 'C' for Rating Plan rules)"
+                        "description": "Optional PART letter to filter by (e.g., 'C'). Use find_part_by_description first to determine the correct PART letter."
                     }
                 },
                 "required": []
@@ -134,7 +148,8 @@ def answer_pdf_question(question: str, pdfs_folder: str,
     system_prompt = """You are an insurance document analysis assistant. Answer questions using the available tools.
 
 Important instructions:
-- For questions about "rating plan rules", use part_filter='C' to get PART C (Rating Plan) rules
+- When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
+- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
 - When calculating premiums, break down the calculation step-by-step
 - Always cite specific rule numbers and page numbers when referencing rules
 - For table lookups, be precise with search criteria
@@ -194,7 +209,9 @@ Answer questions completely and accurately."""
 
                     # Execute tool
                     try:
-                        if tool_name == "search_rules":
+                        if tool_name == "find_part_by_description":
+                            result = toolkit.find_part_by_description(**tool_input)
+                        elif tool_name == "search_rules":
                             result = toolkit.search_rules(**tool_input)
                         elif tool_name == "list_all_rules":
                             result = toolkit.list_all_rules(**tool_input)

@@ -152,6 +152,71 @@ class PDFToolkit:
 
         return "\n---\n".join(results)
 
+    def find_part_by_description(self, description: str) -> str:
+        """
+        Find which PART letter corresponds to a description (e.g., "rating plan", "general rules").
+
+        Args:
+            description: Description of the section to find (e.g., "rating plan", "optional coverages")
+
+        Returns:
+            PART letter and name that best matches the description
+        """
+        if not self._rules_chunks:
+            return "No rules data available."
+
+        # Get all unique PARTs with their names
+        parts = {}
+        for chunk in self._rules_chunks:
+            part = chunk.metadata.get('part')
+            part_name = chunk.metadata.get('part_name')
+            if part and part_name and part not in parts:
+                parts[part] = part_name
+
+        if not parts:
+            return "No PART information found."
+
+        # Search for best matching PART
+        description_lower = description.lower()
+        scored_parts = []
+
+        for part, part_name in parts.items():
+            score = 0
+            part_name_lower = part_name.lower()
+
+            # Exact phrase match
+            if description_lower in part_name_lower:
+                score += 100
+
+            # Word-by-word matching
+            desc_words = description_lower.split()
+            for word in desc_words:
+                if len(word) > 2 and word in part_name_lower:  # Skip short words
+                    score += 10
+
+            if score > 0:
+                scored_parts.append((score, part, part_name))
+
+        if not scored_parts:
+            # If no match, return all PARTs
+            result = "No exact match found. Available PARTs:\n"
+            for part, part_name in sorted(parts.items()):
+                result += f"  PART {part}: {part_name}\n"
+            return result
+
+        # Sort by score and return best match
+        scored_parts.sort(reverse=True, key=lambda x: x[0])
+        best_score, best_part, best_part_name = scored_parts[0]
+
+        result = f"Best match: PART {best_part} - {best_part_name}\n\n"
+
+        if len(scored_parts) > 1:
+            result += "Other possible matches:\n"
+            for score, part, part_name in scored_parts[1:4]:  # Show top 3 alternatives
+                result += f"  PART {part}: {part_name}\n"
+
+        return result
+
     def list_all_rules(self, part_filter: Optional[str] = None) -> str:
         """
         List all rule titles, optionally filtered by PART.
