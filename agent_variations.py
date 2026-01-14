@@ -63,6 +63,10 @@ def run_agent_with_config(question: str, config: ExperimentConfig) -> tuple[str,
                         "type": "string",
                         "description": "Optional PART letter to filter by (e.g., 'C'). Use find_part_by_description first to determine the correct PART letter."
                     },
+                    "document_filter": {
+                        "type": "string",
+                        "description": "Optional source document name to filter by (e.g., 'CT_Rules_Manual.pdf'). Use this to search within a specific document."
+                    },
                     "top_k": {
                         "type": "integer",
                         "description": "Number of results to return (default 5)"
@@ -101,6 +105,28 @@ def run_agent_with_config(question: str, config: ExperimentConfig) -> tuple[str,
                     }
                 },
                 "required": ["exhibit_name"]
+            }
+        },
+        {
+            "name": "find_table_by_description",
+            "description": "Find tables by searching for a description of their content. THIS IS BETTER than guessing exhibit numbers! Search for what the table contains (e.g., 'hurricane deductible factor', 'base rates', 'distance to coast factors') to discover which exhibit has that data.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "What to search for (e.g., 'mandatory hurricane deductible factor', 'base rates for HO3')"
+                    },
+                    "document_filter": {
+                        "type": "string",
+                        "description": "Optional source document name to filter by (e.g., 'CT_Rate_Pages.pdf'). Use this to search within a specific document."
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of best matching tables to return (default: 3)"
+                    }
+                },
+                "required": ["description"]
             }
         },
         {
@@ -205,6 +231,8 @@ def run_agent_with_config(question: str, config: ExperimentConfig) -> tuple[str,
                             result = toolkit.list_all_rules(**tool_input)
                         elif tool_name == "extract_table":
                             result = toolkit.extract_table(**tool_input)
+                        elif tool_name == "find_table_by_description":
+                            result = toolkit.find_table_by_description(**tool_input)
                         elif tool_name == "find_value_in_table":
                             result = toolkit.find_value_in_table(**tool_input)
                         elif tool_name == "calculate":
@@ -250,9 +278,12 @@ BASELINE = ExperimentConfig(
 Important instructions:
 - When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
 - The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
-- When calculating premiums, break down the calculation step-by-step
+- When searching for tables: Use 1-2 word searches ONLY. Search "hurricane" for hurricane rates, "hurricane deductible" for deductible factors. Do NOT add extra keywords.
+- For calculating premiums: X Premium = Base Rate × Mandatory X Deductible Factor
+  1. Base Rate: Search "base rate", extract rate for the peril
+  2. Deductible Factor: Search "X deductible", find table with Policy Form + Coverage A + Applicable Deductible %
+  3. If deductible % not given but location mentioned (coastal areas), try 2%
 - Always cite specific rule numbers and page numbers when referencing rules
-- For table lookups, be precise with search criteria
 - If asked to list items, format as a bulleted list using asterisks (*)
 
 Answer questions completely and accurately.""",
@@ -293,14 +324,18 @@ ENHANCED_HINTS = ExperimentConfig(
 Important instructions:
 - When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
 - The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
-- When calculating premiums, break down the calculation step-by-step:
-  1. Find the base rate for the peril (often in early numbered exhibits)
-  2. Find the applicable factor (often in sequentially numbered exhibits after base rates)
-  3. Multiply base rate by factor
+- When looking for tables: Use find_table_by_description to search by content description (e.g., "hurricane deductible factor", "base rates"). This is BETTER than guessing exhibit numbers! Focus on core keywords (avoid extra adjectives like "mandatory" or "applicable")
+- When calculating premiums, use this formula: X Premium = Base Rate × Mandatory X Deductible Factor
+  Where:
+  1. Base Rate: Search for "base rate", extract the rate for the specific peril (e.g., Hurricane = $293)
+  2. Mandatory X Deductible Factor: Search for "X deductible" (e.g., "hurricane deductible")
+     - You need: Policy Form, Coverage A Limit, and Applicable X Deductible %
+     - If deductible % not given but location mentioned (e.g., "coastal"), check rules for requirements, then try 2% (common for coastal areas)
+     - Look for table with 1000+ rows showing different deductible percentages
+  3. Calculate: Base Rate × Deductible Factor
 - Always cite specific rule numbers and page numbers when referencing rules
 - For table lookups, be precise with search criteria (match exact column names and values)
 - If asked to list items, format as a bulleted list using asterisks (*)
-- When searching exhibits, start with lower numbers for base data and higher numbers for factors/adjustments
 
 Answer questions completely and accurately.""",
     model="claude-sonnet-4-20250514",

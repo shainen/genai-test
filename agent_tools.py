@@ -87,6 +87,7 @@ class PDFToolkit:
               f"{len(self._tables or [])} tables")
 
     def search_rules(self, query: str, part_filter: Optional[str] = None,
+                     document_filter: Optional[str] = None,
                      top_k: int = 5) -> str:
         """
         Search for rules matching a query.
@@ -94,6 +95,7 @@ class PDFToolkit:
         Args:
             query: Search query (e.g., "hurricane deductible", "distance to coast")
             part_filter: Optional PART letter to filter by (e.g., 'C' for Rating Plan)
+            document_filter: Optional source document name to filter by (e.g., "CT_Rules_Manual.pdf")
             top_k: Number of results to return
 
         Returns:
@@ -106,6 +108,10 @@ class PDFToolkit:
         chunks = self._rules_chunks
         if part_filter:
             chunks = [c for c in chunks if c.metadata.get('part') == part_filter]
+
+        # Filter by source document if specified
+        if document_filter:
+            chunks = [c for c in chunks if document_filter.lower() in c.source_document.lower()]
 
         # Simple keyword matching (could be enhanced with embeddings)
         query_lower = query.lower()
@@ -145,6 +151,7 @@ class PDFToolkit:
             rule_info = (
                 f"Rule {chunk.metadata['rule_section']}: {chunk.metadata['rule_title']}\n"
                 f"Part {chunk.metadata['part']} ({chunk.metadata['part_name']})\n"
+                f"Source: {chunk.source_document}\n"
                 f"Pages {chunk.metadata['start_page']}-{chunk.metadata['end_page']}\n"
                 f"Content: {chunk.content[:500]}...\n"
             )
@@ -327,6 +334,98 @@ class PDFToolkit:
 
         return "\n---\n".join(results)
 
+    def find_table_by_description(self, description: str, document_filter: Optional[str] = None,
+                                   top_k: int = 3) -> str:
+        """
+        Find tables by searching their page context for a description.
+        This is better than guessing exhibit numbers - search for what the table contains.
+
+        Args:
+            description: What to search for (e.g., "hurricane deductible factor",
+                        "base rates", "distance to coast")
+            document_filter: Optional source document name to filter by (e.g., "CT_Rate_Pages.pdf")
+            top_k: Number of best matching tables to return (default: 3)
+
+        Returns:
+            Information about matching tables including exhibit names and sample data
+
+        Example:
+            Instead of guessing "Exhibit 16", search for "hurricane deductible"
+            to find whichever exhibit contains that data.
+        """
+        if not self._tables:
+            return "No table data available."
+
+        # Filter by source document if specified
+        tables = self._tables
+        if document_filter:
+            tables = [t for t in tables if document_filter.lower() in t.source_document.lower()]
+
+        # Score all tables based on description match in page text
+        description_lower = description.lower()
+        scored_tables = []
+
+        for table in tables:
+            score = 0
+            page_text_lower = table.page_text.lower()
+
+            # Check if description appears in page text
+            if description_lower in page_text_lower:
+                score += 100
+
+            # Word-by-word matching
+            desc_words = description_lower.split()
+            for word in desc_words:
+                if len(word) > 2 and word in page_text_lower:
+                    score += 10
+
+            # Also check headers for relevance
+            headers_text = ' '.join(str(h) if h else '' for h in table.headers).lower()
+            if description_lower in headers_text:
+                score += 50
+            for word in desc_words:
+                if len(word) > 2 and word in headers_text:
+                    score += 5
+
+            if score > 0:
+                scored_tables.append((score, table))
+
+        if not scored_tables:
+            return f"No tables found matching '{description}'"
+
+        # Sort by score and return top_k results
+        scored_tables.sort(reverse=True, key=lambda x: x[0])
+        top_tables = scored_tables[:top_k]
+
+        results = []
+        for rank, (score, table) in enumerate(top_tables, 1):
+            result = (
+                f"Match #{rank} (score: {score}):\n"
+                f"  Exhibit: {table.exhibit_name}\n"
+                f"  Source: {table.source_document}\n"
+                f"  Page: {table.page_number}\n"
+                f"  Headers: {table.headers}\n"
+                f"  Rows: {len(table.data)}\n"
+            )
+
+            # Show a snippet of page text around the description
+            page_lower = table.page_text.lower()
+            idx = page_lower.find(description_lower)
+            if idx != -1:
+                start = max(0, idx - 50)
+                end = min(len(table.page_text), idx + len(description) + 50)
+                snippet = table.page_text[start:end].replace('\n', ' ')
+                result += f"  Context: ...{snippet}...\n"
+
+            # Show sample rows
+            result += f"  Sample rows (first 3):\n"
+            for i, row in enumerate(table.data[:3]):
+                result += f"    Row {i}: {row}\n"
+
+            results.append(result)
+
+        return "\n---\n".join(results)
+
     def find_value_in_table(
         self,
         exhibit_name: str,
@@ -348,25 +447,68 @@ class PDFToolkit:
             return "No table data available."
 
         # Find matching table
+        # Strategy: First try to find by exhibit name + column match, then by exhibit name alone
         matching_table = None
+        candidate_tables = []
+
+        # Collect all tables with matching exhibit name
         for table in self._tables:
             if exhibit_name.lower() in table.exhibit_name.lower():
-                matching_table = table
-                break
+                candidate_tables.append(table)
 
-        if not matching_table:
+        if not candidate_tables:
             return f"Exhibit '{exhibit_name}' not found."
+
+        # If only one candidate, use it
+        if len(candidate_tables) == 1:
+            matching_table = candidate_tables[0]
+        else:
+            # Multiple tables with same exhibit name - find the one with matching columns
+            for table in candidate_tables:
+                has_all_columns = True
+                for col_name in search_criteria.keys():
+                    col_found = False
+                    col_name_normalized = col_name.lower().replace('\n', ' ').replace('  ', ' ')
+                    for header in table.headers:
+                        header_normalized = header.lower().replace('\n', ' ').replace('  ', ' ')
+                        if col_name_normalized in header_normalized:
+                            col_found = True
+                            break
+                    if not col_found:
+                        has_all_columns = False
+                        break
+
+                if has_all_columns:
+                    matching_table = table
+                    break
+
+            # If no table has all columns, use first candidate
+            if not matching_table:
+                matching_table = candidate_tables[0]
 
         # Search for matching row
         for row in matching_table.data:
             matches = True
             for col_name, col_value in search_criteria.items():
                 # Find column index
+                # Try exact match first, then substring match
                 col_idx = None
+                col_name_normalized = col_name.lower().replace('\n', ' ').replace('  ', ' ')
+
+                # First pass: exact match
                 for i, header in enumerate(matching_table.headers):
-                    if col_name.lower() in header.lower():
+                    header_normalized = header.lower().replace('\n', ' ').replace('  ', ' ')
+                    if col_name_normalized == header_normalized:
                         col_idx = i
                         break
+
+                # Second pass: substring match if exact not found
+                if col_idx is None:
+                    for i, header in enumerate(matching_table.headers):
+                        header_normalized = header.lower().replace('\n', ' ').replace('  ', ' ')
+                        if col_name_normalized in header_normalized:
+                            col_idx = i
+                            break
 
                 if col_idx is None:
                     return f"Column '{col_name}' not found in {exhibit_name}."
@@ -379,11 +521,24 @@ class PDFToolkit:
             if matches:
                 if return_column:
                     # Return specific column value
+                    # Try exact match first, then substring match
                     ret_col_idx = None
+                    ret_col_normalized = return_column.lower().replace('\n', ' ').replace('  ', ' ')
+
+                    # First pass: exact match
                     for i, header in enumerate(matching_table.headers):
-                        if return_column.lower() in header.lower():
+                        header_normalized = header.lower().replace('\n', ' ').replace('  ', ' ')
+                        if ret_col_normalized == header_normalized:
                             ret_col_idx = i
                             break
+
+                    # Second pass: substring match if exact not found
+                    if ret_col_idx is None:
+                        for i, header in enumerate(matching_table.headers):
+                            header_normalized = header.lower().replace('\n', ' ').replace('  ', ' ')
+                            if ret_col_normalized in header_normalized:
+                                ret_col_idx = i
+                                break
 
                     if ret_col_idx is None:
                         return f"Column '{return_column}' not found in {exhibit_name}."

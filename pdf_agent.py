@@ -66,6 +66,10 @@ def answer_pdf_question(question: str, pdfs_folder: str,
                         "type": "string",
                         "description": "Optional PART letter to filter by (e.g., 'C'). Use find_part_by_description first to determine the correct PART letter."
                     },
+                    "document_filter": {
+                        "type": "string",
+                        "description": "Optional source document name to filter by (e.g., 'CT_Rules_Manual.pdf'). Use this to search within a specific document."
+                    },
                     "top_k": {
                         "type": "integer",
                         "description": "Number of results to return (default 5)"
@@ -104,6 +108,28 @@ def answer_pdf_question(question: str, pdfs_folder: str,
                     }
                 },
                 "required": ["exhibit_name"]
+            }
+        },
+        {
+            "name": "find_table_by_description",
+            "description": "Find tables by searching for a description of their content. THIS IS BETTER than guessing exhibit numbers! Search for what the table contains (e.g., 'hurricane deductible factor', 'base rates', 'distance to coast factors') to discover which exhibit has that data.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "What to search for (e.g., 'mandatory hurricane deductible factor', 'base rates for HO3')"
+                    },
+                    "document_filter": {
+                        "type": "string",
+                        "description": "Optional source document name to filter by (e.g., 'CT_Rate_Pages.pdf'). Use this to search within a specific document."
+                    },
+                    "top_k": {
+                        "type": "integer",
+                        "description": "Number of best matching tables to return (default: 3)"
+                    }
+                },
+                "required": ["description"]
             }
         },
         {
@@ -150,6 +176,7 @@ def answer_pdf_question(question: str, pdfs_folder: str,
 Important instructions:
 - When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
 - The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
+- When searching for tables: Use 1-2 word searches ONLY. For hurricane rates, search "hurricane". For deductibles, search "hurricane deductible". Do NOT add policy details, coverage limits, or location terms to your search. The search will find the right table without them.
 - When calculating premiums, break down the calculation step-by-step
 - Always cite specific rule numbers and page numbers when referencing rules
 - For table lookups, be precise with search criteria
@@ -217,6 +244,8 @@ Answer questions completely and accurately."""
                             result = toolkit.list_all_rules(**tool_input)
                         elif tool_name == "extract_table":
                             result = toolkit.extract_table(**tool_input)
+                        elif tool_name == "find_table_by_description":
+                            result = toolkit.find_table_by_description(**tool_input)
                         elif tool_name == "find_value_in_table":
                             result = toolkit.find_value_in_table(**tool_input)
                         elif tool_name == "calculate":

@@ -7,6 +7,7 @@ Parser B: Table-heavy documents (rate pages with exhibits)
 
 import pdfplumber
 import re
+import os
 from typing import List, Dict, Any, Tuple
 from dataclasses import dataclass
 
@@ -17,6 +18,7 @@ class TextChunk:
     content: str
     page_number: int
     chunk_id: str
+    source_document: str  # Source PDF filename
     metadata: Dict[str, Any]
 
 
@@ -27,6 +29,9 @@ class TableData:
     headers: List[str]
     exhibit_name: str
     page_number: int
+    page_text: str  # Full text from the page containing this table
+    source_document: str  # Source PDF filename (e.g., "CT_MAPS_Rate_Pages_v3.pdf")
+    table_id: str  # Unique identifier: "{source_document}:{exhibit_name}"
     metadata: Dict[str, Any]
 
 
@@ -50,6 +55,9 @@ class RulesManualParser:
         current_content = []
         current_part = None
         current_part_name = None
+
+        # Get source document name
+        source_doc = os.path.basename(self.pdf_path)
 
         with pdfplumber.open(self.pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
@@ -83,7 +91,8 @@ class RulesManualParser:
                                 current_rule['part_name'],
                                 current_rule['start_page'],
                                 current_rule['end_page'],
-                                '\n'.join(current_content)
+                                '\n'.join(current_content),
+                                source_doc
                             )
                             chunks.append(chunk)
                             current_content = []
@@ -117,7 +126,8 @@ class RulesManualParser:
                     current_rule['part_name'],
                     current_rule['start_page'],
                     current_rule['end_page'],
-                    '\n'.join(current_content)
+                    '\n'.join(current_content),
+                    source_doc
                 )
                 chunks.append(chunk)
 
@@ -125,12 +135,14 @@ class RulesManualParser:
 
     def _create_rule_chunk(self, rule_number: str, rule_title: str,
                            part: str, part_name: str,
-                           start_page: int, end_page: int, content: str) -> TextChunk:
+                           start_page: int, end_page: int, content: str,
+                           source_document: str) -> TextChunk:
         """Create a TextChunk for a rule section"""
         return TextChunk(
             content=self._clean_text(content),
             page_number=start_page,
             chunk_id=f"rule_{rule_number}",
+            source_document=source_document,
             metadata={
                 'rule_section': rule_number,
                 'rule_title': rule_title,
@@ -268,6 +280,9 @@ class RatePagesParser:
         text_chunks = []
         tables = []
 
+        # Get source document name (filename without path)
+        source_doc = os.path.basename(self.pdf_path)
+
         with pdfplumber.open(self.pdf_path) as pdf:
             for page_num, page in enumerate(pdf.pages, start=1):
                 # Extract text
@@ -280,6 +295,7 @@ class RatePagesParser:
                         content=text,
                         page_number=page_num,
                         chunk_id=f"page_{page_num}",
+                        source_document=source_doc,
                         metadata={'exhibit_name': exhibit_name}
                     )
                     text_chunks.append(chunk)
@@ -295,16 +311,25 @@ class RatePagesParser:
                         # Find exhibit name for this table
                         exhibit_name = self._extract_exhibit_name(text) if text else f"Table_{page_num}_{table_idx}"
 
+                        # Create unique table ID
+                        table_id = f"{source_doc}:{exhibit_name}"
+
                         table_data = TableData(
                             data=data_rows,
                             headers=headers,
                             exhibit_name=exhibit_name,
                             page_number=page_num,
+                            page_text=text if text else "",  # Store full page text
+                            source_document=source_doc,
+                            table_id=table_id,
                             metadata={'table_index': table_idx}
                         )
                         tables.append(table_data)
 
-        return text_chunks, tables
+        # Merge multi-page tables that span consecutive pages
+        merged_tables = self._merge_multi_page_tables(tables)
+
+        return text_chunks, merged_tables
 
     def extract_table_by_exhibit(self, exhibit_name: str) -> List[TableData]:
         """
@@ -364,6 +389,115 @@ class RatePagesParser:
                     return row
 
         return None
+
+    def _merge_multi_page_tables(self, tables: List[TableData]) -> List[TableData]:
+        """
+        Merge tables that span multiple consecutive pages.
+
+        Tables are considered part of the same logical table if they:
+        1. Have the same exhibit_name
+        2. Have the same headers (or very similar)
+        3. Are on consecutive pages
+
+        Args:
+            tables: List of TableData objects from individual pages
+
+        Returns:
+            List of merged TableData objects (one per logical table)
+        """
+        if not tables:
+            return []
+
+        # Sort tables by page number first
+        sorted_tables = sorted(tables, key=lambda t: t.page_number)
+
+        merged = []
+        current_group = [sorted_tables[0]]
+
+        for i in range(1, len(sorted_tables)):
+            prev_table = current_group[-1]
+            curr_table = sorted_tables[i]
+
+            # Check if this table continues from the previous one
+            should_merge = (
+                # Same exhibit name
+                curr_table.exhibit_name == prev_table.exhibit_name and
+                # Consecutive or nearby pages (within 2 pages to handle page breaks)
+                abs(curr_table.page_number - prev_table.page_number) <= 2 and
+                # Same headers (normalized for comparison)
+                self._headers_match(curr_table.headers, prev_table.headers)
+            )
+
+            if should_merge:
+                # Add to current group
+                current_group.append(curr_table)
+            else:
+                # Finalize current group and start new one
+                if current_group:
+                    merged.append(self._merge_table_group(current_group))
+                current_group = [curr_table]
+
+        # Don't forget the last group
+        if current_group:
+            merged.append(self._merge_table_group(current_group))
+
+        return merged
+
+    def _headers_match(self, headers1: List[str], headers2: List[str]) -> bool:
+        """Check if two header lists represent the same table structure"""
+        if len(headers1) != len(headers2):
+            return False
+
+        # Normalize headers (remove whitespace, lowercase)
+        def normalize(h):
+            if h is None:
+                return ""
+            return str(h).replace('\n', ' ').replace('  ', ' ').strip().lower()
+
+        norm1 = [normalize(h) for h in headers1]
+        norm2 = [normalize(h) for h in headers2]
+
+        return norm1 == norm2
+
+    def _merge_table_group(self, group: List[TableData]) -> TableData:
+        """
+        Merge a group of TableData objects into a single one.
+
+        Combines all rows and aggregates metadata.
+        """
+        if len(group) == 1:
+            return group[0]
+
+        # Use first table as base
+        base = group[0]
+
+        # Combine all data rows
+        all_rows = []
+        for table in group:
+            all_rows.extend(table.data)
+
+        # Combine page text from all pages
+        combined_page_text = "\n---PAGE BREAK---\n".join(
+            table.page_text for table in group if table.page_text
+        )
+
+        # Create merged table
+        merged = TableData(
+            data=all_rows,
+            headers=base.headers,
+            exhibit_name=base.exhibit_name,
+            page_number=base.page_number,  # Keep first page as reference
+            page_text=combined_page_text,
+            source_document=base.source_document,  # Same source document
+            table_id=base.table_id,  # Keep the same table_id (source:exhibit is still unique)
+            metadata={
+                'table_index': base.metadata.get('table_index', 0),
+                'merged_from_pages': [t.page_number for t in group],
+                'total_pages': len(group)
+            }
+        )
+
+        return merged
 
     def _extract_exhibit_name(self, text: str) -> str:
         """Extract exhibit name from text"""
