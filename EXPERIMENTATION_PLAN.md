@@ -76,8 +76,50 @@ Every variation must be rated on specificity:
 
 ### Hold-Out Set (final test only - don't look at during development)
 1. How many rules are in PART B?
-2. Calculate Water Weather premium for HO3 with $400,000 Coverage A and 2% deductible
-3. What is the policy territory determination rule?
+2. Calculate Water Weather premium for HO3 with $300,000 Coverage A and 2% deductible
+3. What does the policy territory determination rule specify?
+
+### PDF Distribution & Overfitting Mitigation
+
+**Important Context**: The artifacts folder contains **22 PDFs**, but our parser only processes **8 PDFs**:
+- **3 Rules/Manual PDFs** (match pattern: "Rules" or "Manual" in filename)
+- **5 Rate/Pages PDFs** (match pattern: "Rate" or "Pages" in filename)
+- **14 other PDFs** are not parsed (administrative documents, exhibits, checklists, etc.)
+
+**Original Q1/Q2 Data Sources** (per README):
+- **Q1**: Uses 1 specific Rules PDF: `CT Legacy Homeowner Rules eff 04.01.24 mu to MAPS Homeowner Rules eff 8.18.25 v3.pdf`
+- **Q2**: Uses 2 specific PDFs:
+  - Rules: `CT MAPS Homeowner Rules Manual eff 08.18.25 v4.pdf` (for Rule C-7)
+  - Rates: `CT Homeowners MAPS Rate Pages Eff 8.18.25 v3.pdf` (for Exhibits 1 & 6)
+- **Total: 3 specific PDFs**
+
+**Our System Loads All 8 PDFs Into Merged Dataset**:
+- Our toolkit processes ALL matching PDFs, creating a merged corpus of:
+  - 195 rule chunks (from 3 Rules PDFs combined)
+  - 342 rate chunks (from 5 Rates PDFs combined)
+  - 341 tables (from 5 Rates PDFs combined)
+
+**Implications for Generalization Testing**:
+
+✅ **Reduces Overfitting Risk**:
+- Synthetic questions draw from **8 PDFs**, not just the original 3
+- Agent must search across multiple sources (realistic scenario)
+- PART B and PART F data may come from different Rules PDFs than PART C
+- Exhibit data may have duplicates/variations across the 5 Rates PDFs
+- Can't simply memorize "look in PDF X for Y"
+
+⚠️ **Remaining Limitations**:
+- All data still comes from the same **8 PDF subset**
+- Agent never encounters the other 14 PDFs
+- Could still overfit to naming/structural patterns of these 8 PDFs
+- Not testing true cross-document-format generalization
+
+**Testing Strategy**:
+This setup provides a **realistic middle ground**:
+- More diverse than testing on just 3 PDFs
+- Tests retrieval across multiple sources (common in production)
+- Mitigates PDF-specific overfitting while staying within provided data
+- Synthetic questions likely pull from different PDFs than Q1/Q2, forcing the agent to generalize its search strategies
 
 ---
 

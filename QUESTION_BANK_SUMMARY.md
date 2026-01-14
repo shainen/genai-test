@@ -113,6 +113,47 @@ all_questions = get_all_questions()
 
 ---
 
+## PDF Distribution & Data Sources
+
+### Which PDFs Are Used?
+
+The `artifacts/1` folder contains **22 PDFs**, but our system only parses **8 PDFs**:
+
+**Parsed PDFs (8 total)**:
+- **3 Rules/Manual PDFs**: Contain PART A-I rule sections
+  - `(215066178-180449588)-CT MAPS Homeowner Rules Manual eff 08.18.25 v4.pdf`
+  - `(215066178-180449602)-CT Legacy Homeowner Rules eff 04.01.24 mu to MAPS Homeowner Rules eff 8.18.25 v3.pdf`
+  - `(213435475-179483982)-Checklist - HO Rules - May 2022.pdf`
+
+- **5 Rate/Pages PDFs**: Contain exhibits with rates and factors
+  - `(215004905-180407973)-CT Homeowners MAPS Rate Pages Eff 8.18.25 v3.pdf`
+  - `(214933333-180358021)-CT Homeowners MAPS Tier Rate Pages Eff 8.18.25.pdf`
+  - `(214933335-180357999)-CT ACIC MAPS HO Rate Profile 08_18_25 v2.pdf`
+  - `(213435474-179483964)-Checklist - HO Rates.pdf`
+  - `(213435477-179484094)-CT MAPS Home Rate.Rule Filing eff 8.18.25 Cover Letter.pdf`
+
+**Not Parsed (14 PDFs)**: Administrative documents, checklists, exhibits, memoranda, etc.
+
+### Original Q1/Q2 vs Synthetic Questions
+
+**Original Questions (per README)**:
+- Use **3 specific PDFs** (1 for Q1, 2 for Q2)
+- Q1: Uses the Legacy Rules PDF
+- Q2: Uses the MAPS Rules Manual + MAPS Rate Pages
+
+**Our Synthetic Questions**:
+- Draw from **merged dataset of all 8 parsed PDFs**
+- PART B/F data may come from different Rules PDFs than PART C
+- Exhibit data aggregated across 5 different Rates PDFs
+
+**Why This Matters for Generalization**:
+- ✅ Reduces risk of overfitting to the specific 3 PDFs used in Q1/Q2
+- ✅ Tests agent's ability to search across multiple data sources
+- ✅ More realistic scenario (production systems have many documents)
+- ✅ Synthetic questions likely pull from different PDFs than originals
+
+---
+
 ## Notes
 
 1. **PART F vs PART G**: The parser identifies PART F as the best match for "optional coverage rules" based on the heading "COVERAGE A, B, C, D, E – OPTIONAL"
@@ -122,3 +163,5 @@ all_questions = get_all_questions()
 3. **Rule Counts**: The parser finds 35 PART C rules vs 33 in the expected output. The 2 additional rules (Yard Debris Factor, Umbrella Coverage Factor) do exist in the PDF.
 
 4. **Deductible Factors**: All three calculation questions use the 2% deductible with the same factor (2.061), but applied to different base rates for different perils.
+
+5. **Data Merging**: Our toolkit merges data from 8 PDFs, creating 195 rule chunks, 342 rate chunks, and 341 tables. Questions can be answered from any combination of these sources.
