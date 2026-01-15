@@ -153,7 +153,7 @@ class PDFToolkit:
                 f"Part {chunk.metadata['part']} ({chunk.metadata['part_name']})\n"
                 f"Source: {chunk.source_document}\n"
                 f"Pages {chunk.metadata['start_page']}-{chunk.metadata['end_page']}\n"
-                f"Content: {chunk.content[:500]}...\n"
+                f"Content: {chunk.content[:2000]}{'...' if len(chunk.content) > 2000 else ''}\n"
             )
             results.append(rule_info)
 
