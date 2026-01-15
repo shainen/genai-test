@@ -297,6 +297,33 @@ Answer questions completely and accurately.""",
     ]
 )
 
+# Variation 1b: Minimal WITHOUT search hints
+MINIMAL_NO_HINTS = ExperimentConfig(
+    name="minimal_no_hints",
+    description="Minimal prompt without search hints",
+    system_prompt="""You are an insurance document analysis assistant. Answer questions using the available tools.
+
+Important instructions:
+- When asked about specific types of rules, use find_part_by_description to determine which PART to search
+- When asked to list items, format as a bulleted list using asterisks (*)
+- For calculations: Always end your response with the final numerical answer on the last line and round to the nearest dollar
+
+Answer questions completely and accurately.""",
+    model="claude-sonnet-4-20250514",
+    max_iterations=10,
+    temperature=1.0,
+    specificity_level=3,  # Most general
+    assumptions=[
+        "Documents are organized into PARTs",
+        "Tables are in numbered exhibits"
+    ],
+    expected_fragility=[
+        "May struggle with complex multi-hop reasoning",
+        "No formula or search guidance provided",
+        "Agent must discover search strategy independently"
+    ]
+)
+
 # Variation 2: Moderate guidance (medium specificity)
 MODERATE = ExperimentConfig(
     name="moderate",
@@ -416,6 +443,58 @@ For calculations: Always end your response with the final numerical answer on th
 )
 
 
+# Variation 4b: Detailed WITHOUT search hints
+DETAILED_NO_HINTS = ExperimentConfig(
+    name="detailed_no_hints",
+    description="Detailed prompt with step-by-step instructions but without search hints",
+    system_prompt="""You are an insurance document analysis assistant.
+
+For calculating premiums, use this formula:
+  X Premium = Base Rate × Mandatory X Deductible Factor
+
+Where:
+- Base Rate: Found in rate table "Base Rates"
+- Mandatory X Deductible Factor: Found in rate table "X Deductible Factor" (e.g., "Hurricane Deductible Factor")
+  - To find the correct row, you need: Policy Form, Coverage A Limit, and Applicable X Deductible
+  - If Applicable X Deductible is not given directly, search rules to find how to determine it
+
+Example for Hurricane Premium:
+1. Find Base Rates table, extract Hurricane base rate
+2. Determine Applicable Hurricane Deductible:
+   - If percentage given directly (e.g., "2% deductible"), use that
+   - If only location given (e.g., "Coastline Neighborhood 3,000 feet from coast"):
+     a. Search rules for hurricane deductibles to understand requirements
+     b. If rules mention "mandatory hurricane deductible for coastal locations" but don't specify percentage:
+        - Try querying the Hurricane Deductible Factor table with 2% (common for coastal)
+        - The factor table has rows for different deductible % - find the row matching your Policy Form + Coverage A + deductible %
+3. Find Hurricane Deductible Factor table
+   - Important: Identify which Exhibit # and page has the table with Coverage A Limit column (will show 1329 rows)
+   - Multiple exhibits may have same number but different content on different pages
+4. Query the CORRECT table (the one with 1329 rows, Coverage A Limit, and Applicable Hurricane Deductible columns)
+   - Use the exact exhibit name and page from search results
+   - Match: Policy Form, Coverage A Limit, Applicable Hurricane Deductible to find the factor
+5. Calculate: Base Rate × Hurricane Deductible Factor
+
+If asked to list items, format as a bulleted list using asterisks (*)
+For calculations: Always end your response with the final numerical answer on the last line (e.g., "The unadjusted Hurricane premium is $XXX") and round to the nearest dollar""",
+    model="claude-sonnet-4-20250514",
+    max_iterations=10,
+    temperature=1.0,
+    specificity_level=1,  # Most specific
+    assumptions=[
+        "Base rates in 'Base Rates' table",
+        "Deductible factors in 'X Deductible Factor' tables",
+        "Coastal areas typically use 2% hurricane deductible",
+        "Hurricane deductible table has 1329 rows"
+    ],
+    expected_fragility=[
+        "Highly specific to current document structure",
+        "May fail if table names, row counts, or percentages change",
+        "Agent must discover optimal search queries without hints"
+    ]
+)
+
+
 # ============================================================================
 # EXPERIMENTAL VARIATIONS (Search Mode × Prompt)
 # ============================================================================
@@ -431,33 +510,56 @@ def create_search_variant(base_config: ExperimentConfig, search_mode: str) -> Ex
     variant.search_mode = search_mode
     return variant
 
-# Create 9 experimental variations: 3 search modes × 3 prompt specificity levels
-# STRICT search mode
+# Create 18 experimental variations: 3 search modes × 2 hints × 3 specificity levels
+# This is a 3×2×3 factorial design
+
+# STRICT search mode (6 variations)
 STRICT_MINIMAL = create_search_variant(MINIMAL, "strict")
+STRICT_MINIMAL_NO_HINTS = create_search_variant(MINIMAL_NO_HINTS, "strict")
 STRICT_MODERATE = create_search_variant(MODERATE, "strict")
+STRICT_MODERATE_NO_HINTS = create_search_variant(MODERATE_NO_HINTS, "strict")
 STRICT_DETAILED = create_search_variant(DETAILED, "strict")
+STRICT_DETAILED_NO_HINTS = create_search_variant(DETAILED_NO_HINTS, "strict")
 
-# WEIGHTED search mode (baseline)
+# WEIGHTED search mode (6 variations - baseline)
 WEIGHTED_MINIMAL = create_search_variant(MINIMAL, "weighted")
+WEIGHTED_MINIMAL_NO_HINTS = create_search_variant(MINIMAL_NO_HINTS, "weighted")
 WEIGHTED_MODERATE = create_search_variant(MODERATE, "weighted")
+WEIGHTED_MODERATE_NO_HINTS = create_search_variant(MODERATE_NO_HINTS, "weighted")
 WEIGHTED_DETAILED = create_search_variant(DETAILED, "weighted")
+WEIGHTED_DETAILED_NO_HINTS = create_search_variant(DETAILED_NO_HINTS, "weighted")
 
-# FUZZY search mode
+# FUZZY search mode (6 variations)
 FUZZY_MINIMAL = create_search_variant(MINIMAL, "fuzzy")
+FUZZY_MINIMAL_NO_HINTS = create_search_variant(MINIMAL_NO_HINTS, "fuzzy")
 FUZZY_MODERATE = create_search_variant(MODERATE, "fuzzy")
+FUZZY_MODERATE_NO_HINTS = create_search_variant(MODERATE_NO_HINTS, "fuzzy")
 FUZZY_DETAILED = create_search_variant(DETAILED, "fuzzy")
+FUZZY_DETAILED_NO_HINTS = create_search_variant(DETAILED_NO_HINTS, "fuzzy")
 
-# Experimental variations for final submission
+# Experimental variations for final submission (3×2×3 = 18 variations)
 EXPERIMENTAL_VARIATIONS = [
+    # Strict search (6)
     STRICT_MINIMAL,
+    STRICT_MINIMAL_NO_HINTS,
     STRICT_MODERATE,
+    STRICT_MODERATE_NO_HINTS,
     STRICT_DETAILED,
+    STRICT_DETAILED_NO_HINTS,
+    # Weighted search (6)
     WEIGHTED_MINIMAL,
+    WEIGHTED_MINIMAL_NO_HINTS,
     WEIGHTED_MODERATE,
+    WEIGHTED_MODERATE_NO_HINTS,
     WEIGHTED_DETAILED,
+    WEIGHTED_DETAILED_NO_HINTS,
+    # Fuzzy search (6)
     FUZZY_MINIMAL,
+    FUZZY_MINIMAL_NO_HINTS,
     FUZZY_MODERATE,
-    FUZZY_DETAILED
+    FUZZY_MODERATE_NO_HINTS,
+    FUZZY_DETAILED,
+    FUZZY_DETAILED_NO_HINTS
 ]
 
 # Original variations (kept for backwards compatibility)

@@ -2,9 +2,9 @@
 
 ## Overview
 
-This experiment tests the interaction between **search methodology** and **prompt specificity** to determine the optimal configuration for the PDF question-answering agent.
+This experiment tests the interaction between **search methodology**, **search hints**, and **prompt specificity** to determine the optimal configuration for the PDF question-answering agent.
 
-This is a **3×3 factorial design** testing 9 configurations total.
+This is a **3×2×3 factorial design** testing **18 configurations** total.
 
 ## Experimental Variables
 
@@ -24,95 +24,148 @@ Implemented in `agent_tools.py:PDFToolkit.__init__(search_mode=...)`:
   - Low precision, high recall
   - Maximizes coverage but may return less relevant results
 
-### 2. Prompt Specificity (3 levels)
+### 2. Search Hints (2 variations)
 
-All prompts include the search hint: "Use 1-2 word searches ONLY"
+- **WITH_HINTS**: Includes explicit search query guidance
+  - Contains: "Use 1-2 word searches ONLY"
+  - Provides examples: "Search 'hurricane' for hurricane rates"
+  - Guides the agent on optimal query construction
 
-- **MINIMAL** (`minimal`): Basic instructions only
+- **NO_HINTS**: Formula and structure without search guidance
+  - Same calculation formulas and steps
+  - No explicit instructions about query construction
+  - Agent must discover optimal search strategy independently
+
+### 3. Prompt Specificity (3 levels)
+
+- **MINIMAL** (specificity=3): Basic instructions only
   - Minimal domain guidance
   - No formula provided
   - No step-by-step instructions
-  - Specificity level: 3 (most general)
+  - Most general approach
 
-- **MODERATE** (`moderate`): Formula guidance with examples
+- **MODERATE** (specificity=2): Formula guidance with examples
   - Provides calculation formula: `X Premium = Base Rate × Mandatory X Deductible Factor`
   - Gives high-level steps for finding rates and factors
-  - Includes search examples: "Search 'hurricane' for hurricane rates"
-  - Specificity level: 2 (medium)
+  - Medium specificity
 
-- **DETAILED** (`detailed`): Step-by-step instructions
+- **DETAILED** (specificity=1): Step-by-step instructions
   - Complete worked example for Hurricane premium calculation
   - Specific table names and expected row counts
   - Detailed decision tree for determining deductible percentages
   - Hardcoded assumptions (e.g., "2% for coastal", "1329 rows")
-  - Specificity level: 1 (most specific)
+  - Most specific approach
 
 ## Experimental Variations
 
-Total: **9 variations** (3 search modes × 3 prompt specificity levels)
+Total: **18 variations** (3 search modes × 2 hints × 3 specificity levels)
 
-### Strict Search Mode
-1. `strict_minimal` - Strict + minimal prompt
-2. `strict_moderate` - Strict + moderate prompt
-3. `strict_detailed` - Strict + detailed prompt
+### Strict Search Mode (6 variations)
+1. `strict_minimal` - Strict + minimal + hints
+2. `strict_minimal_no_hints` - Strict + minimal + no hints
+3. `strict_moderate` - Strict + moderate + hints
+4. `strict_moderate_no_hints` - Strict + moderate + no hints
+5. `strict_detailed` - Strict + detailed + hints
+6. `strict_detailed_no_hints` - Strict + detailed + no hints
 
-### Weighted Search Mode (Baseline)
-4. `weighted_minimal` - Weighted + minimal prompt
-5. `weighted_moderate` - Weighted + moderate prompt (current baseline)
-6. `weighted_detailed` - Weighted + detailed prompt
+### Weighted Search Mode (6 variations - baseline)
+7. `weighted_minimal` - Weighted + minimal + hints
+8. `weighted_minimal_no_hints` - Weighted + minimal + no hints
+9. `weighted_moderate` - Weighted + moderate + hints (current baseline)
+10. `weighted_moderate_no_hints` - Weighted + moderate + no hints
+11. `weighted_detailed` - Weighted + detailed + hints
+12. `weighted_detailed_no_hints` - Weighted + detailed + no hints
 
-### Fuzzy Search Mode
-7. `fuzzy_minimal` - Fuzzy + minimal prompt
-8. `fuzzy_moderate` - Fuzzy + moderate prompt
-9. `fuzzy_detailed` - Fuzzy + detailed prompt
+### Fuzzy Search Mode (6 variations)
+13. `fuzzy_minimal` - Fuzzy + minimal + hints
+14. `fuzzy_minimal_no_hints` - Fuzzy + minimal + no hints
+15. `fuzzy_moderate` - Fuzzy + moderate + hints
+16. `fuzzy_moderate_no_hints` - Fuzzy + moderate + no hints
+17. `fuzzy_detailed` - Fuzzy + detailed + hints
+18. `fuzzy_detailed_no_hints` - Fuzzy + detailed + no hints
 
 ## Research Questions
 
-1. **Search Method Impact**: Which search strictness level performs best?
+This factorial design allows us to test main effects and interactions:
+
+### Main Effects
+
+1. **Search Mode**: Which search strictness level performs best?
+   - Strict vs Weighted vs Fuzzy (averaged across hints and specificity)
    - Does strict mode improve precision at the cost of recall?
-   - Does fuzzy mode improve recall on complex multi-hop questions?
-   - Is weighted mode the optimal balance?
+   - Does fuzzy mode help with complex multi-hop reasoning?
 
-2. **Prompt Specificity Impact**: How much guidance does the agent need?
-   - Does MINIMAL provide enough information for the agent to succeed?
-   - Does DETAILED's specificity hurt generalization?
-   - Is MODERATE the optimal balance?
+2. **Search Hints**: Do explicit search hints improve performance?
+   - Hints vs No Hints (averaged across search mode and specificity)
+   - Can the agent discover optimal queries without guidance?
+   - At what cost (iterations, latency)?
 
-3. **Interaction Effects**: How do search mode and prompt specificity interact?
-   - Does strict search require more detailed prompts?
-   - Can fuzzy search compensate for minimal prompts?
-   - Are there synergistic combinations?
+3. **Prompt Specificity**: How much domain guidance is optimal?
+   - Minimal vs Moderate vs Detailed (averaged across search mode and hints)
+   - Does MINIMAL provide enough information?
+   - Does DETAILED overfit to dev set?
 
-4. **Generalization**: Which configuration generalizes best from dev to validation?
-   - Measured by generalization score: `((Val+Hold)/2) / Dev`
+### Two-Way Interactions
+
+4. **Search × Hints**: Do hints matter differently for different search modes?
+   - Hypothesis: Strict search may benefit more from hints (fewer results to choose from)
+   - Fuzzy search may be more robust without hints (more results available)
+
+5. **Search × Specificity**: Do search modes work better with certain prompt levels?
+   - Hypothesis: Strict + Detailed may achieve highest precision
+   - Fuzzy + Minimal may struggle the most
+
+6. **Hints × Specificity**: At what specificity level do hints stop mattering?
+   - Hypothesis: MINIMAL needs hints (no formula or structure)
+   - DETAILED may work without hints (everything is specified)
+   - Where's the threshold?
+
+### Three-Way Interaction
+
+7. **Search × Hints × Specificity**: Are there optimal combinations?
+   - Which specific configuration achieves best overall performance?
+
+### Generalization
+
+8. **Overfitting Analysis**: Which factors predict generalization?
+   - Measured by: `((Val+Hold)/2) / Dev`
    - Target: ≥0.8 generalization score
-   - Hypothesis: DETAILED may overfit to dev set
+   - Hypothesis: DETAILED may overfit, NO_HINTS may generalize better
 
 ## Running the Experiments
 
-### Full Experiment (Development + Validation)
+### Full Experiment (Development + Validation + Holdout)
 
-```bash
-python run_experiments.py --experimental --categories development validation --verbose
-```
-
-### With Holdout Set (Final Evaluation)
+This is the final experiment - include all question sets:
 
 ```bash
 python run_experiments.py --experimental --categories development validation holdout --verbose
 ```
 
-### Individual Variation Testing
+Estimated runtime: ~18 variations × 10 questions × ~40s ≈ **120 minutes (2 hours)**
+
+### Without Holdout (Faster iteration during development)
+
+```bash
+python run_experiments.py --experimental --categories development validation --verbose
+```
+
+Estimated runtime: ~18 variations × 7 questions × ~40s ≈ **84 minutes**
+
+### Focused Experiments
 
 ```bash
 # Test just the weighted baseline
 python run_experiments.py --experimental --variations weighted_moderate --categories development --verbose
 
-# Test all strict variations
-python run_experiments.py --experimental --variations strict_minimal strict_moderate strict_detailed --categories development validation --verbose
+# Test hints effect at moderate specificity
+python run_experiments.py --experimental --variations weighted_moderate weighted_moderate_no_hints --categories development validation --verbose
 
-# Test all minimal prompts across search modes
-python run_experiments.py --experimental --variations strict_minimal weighted_minimal fuzzy_minimal --categories development validation --verbose
+# Test all weighted variations (2x3 = 6)
+python run_experiments.py --experimental --variations weighted_minimal weighted_minimal_no_hints weighted_moderate weighted_moderate_no_hints weighted_detailed weighted_detailed_no_hints --categories development validation --verbose
+
+# Test specificity at weighted+hints (1x1x3 = 3)
+python run_experiments.py --experimental --variations weighted_minimal weighted_moderate weighted_detailed --categories development validation --verbose
 ```
 
 ## Expected Outcomes
@@ -125,20 +178,35 @@ Based on prior experiments:
 
 **Hypotheses**:
 
-1. **Search Mode Effects**:
-   - Strict mode may reduce noise but could hurt recall on complex multi-hop questions
-   - Fuzzy mode may help with broader context exploration
-   - Weighted mode likely provides best balance
+1. **Search Mode Main Effect**:
+   - Weighted > Fuzzy > Strict (overall performance)
+   - Strict may hurt recall on multi-hop questions
+   - Fuzzy may return too much noise
 
-2. **Prompt Specificity Effects**:
-   - MINIMAL may struggle with complex calculations (no formula provided)
-   - MODERATE likely achieves best generalization (balanced guidance)
-   - DETAILED may overfit to specific document structure (1329 rows, 2% deductible)
+2. **Search Hints Main Effect**:
+   - Hints > No Hints (overall performance)
+   - Effect size: ~10-20% accuracy difference
+   - Larger effect on MINIMAL than DETAILED
 
-3. **Interaction Effects**:
-   - Strict + Detailed may achieve highest precision
-   - Fuzzy + Minimal may struggle the most
-   - Weighted + Moderate is current known baseline (100% dev, 80% val)
+3. **Prompt Specificity Main Effect**:
+   - MODERATE > DETAILED > MINIMAL (generalization)
+   - DETAILED > MODERATE > MINIMAL (dev accuracy)
+   - MINIMAL may fail on calculations (no formula)
+   - DETAILED may overfit (hardcoded assumptions)
+
+4. **Search × Hints Interaction**:
+   - Strict benefits more from hints (high precision needs good queries)
+   - Fuzzy less affected by hints (high recall compensates)
+
+5. **Hints × Specificity Interaction**:
+   - MINIMAL + No Hints may fail completely
+   - DETAILED + No Hints may still work (all info in prompt)
+   - Threshold likely at MODERATE level
+
+6. **Best Configuration Prediction**:
+   - Development accuracy: Strict + DETAILED + Hints
+   - Generalization: Weighted + MODERATE + Hints (current baseline)
+   - Most robust: Fuzzy + MODERATE + Hints
 
 ## Success Criteria
 
@@ -157,31 +225,83 @@ Per the assignment's recommendation system:
 
 ## Results Analysis
 
-After running experiments, analyze results along multiple dimensions:
+After running experiments, perform factorial ANOVA-style analysis:
 
-### 1. Main Effects
-- **Search Mode**: Compare strict vs weighted vs fuzzy (averaged across prompts)
-- **Prompt Specificity**: Compare minimal vs moderate vs detailed (averaged across search modes)
+### 1. Main Effects (Average Across Other Factors)
 
-### 2. Interaction Effects
-Create a 3×3 grid showing all combinations:
+**Search Mode Effect:**
 ```
-                Minimal    Moderate    Detailed
-Strict          X%         X%          X%
-Weighted        X%         X%          X%
-Fuzzy           X%         X%          X%
+                 Dev%    Val%    Gen     Iter    Time
+Strict (n=6)     X       X       X       X       X
+Weighted (n=6)   X       X       X       X       X
+Fuzzy (n=6)      X       X       X       X       X
 ```
 
-### 3. Key Metrics
-- **Accuracy**: Dev / Val / Holdout percentages
-- **Generalization**: ((Val+Hold)/2) / Dev score
-- **Efficiency**: Avg iterations, tool calls, latency
-- **Robustness**: Which configs pass all dev questions?
+**Hints Effect:**
+```
+                 Dev%    Val%    Gen     Iter    Time
+With Hints (n=9) X       X       X       X       X
+No Hints (n=9)   X       X       X       X       X
+```
 
-### 4. Specific Comparisons
-- Best overall configuration (highest dev + val + generalization)
-- Most efficient configuration (lowest iterations + latency)
-- Most generalizable configuration (highest generalization score)
-- Overfitting detection (high dev, low val)
+**Specificity Effect:**
+```
+                 Dev%    Val%    Gen     Iter    Time
+Minimal (n=6)    X       X       X       X       X
+Moderate (n=6)   X       X       X       X       X
+Detailed (n=6)   X       X       X       X       X
+```
+
+### 2. Two-Way Interactions
+
+**Search × Hints:**
+```
+                 Hints   No Hints   Δ
+Strict           X%      X%         X%
+Weighted         X%      X%         X%
+Fuzzy            X%      X%         X%
+```
+
+**Search × Specificity:**
+```
+                 Minimal  Moderate  Detailed
+Strict           X%       X%        X%
+Weighted         X%       X%        X%
+Fuzzy            X%       X%        X%
+```
+
+**Hints × Specificity:**
+```
+                 Hints    No Hints   Δ
+Minimal          X%       X%         X%
+Moderate         X%       X%         X%
+Detailed         X%       X%         X%
+```
+
+### 3. Three-Way Grid (Search × Specificity for each Hint level)
+
+**With Hints:**
+```
+                 Minimal  Moderate  Detailed
+Strict           X%       X%        X%
+Weighted         X%       X%        X%
+Fuzzy            X%       X%        X%
+```
+
+**No Hints:**
+```
+                 Minimal  Moderate  Detailed
+Strict           X%       X%        X%
+Weighted         X%       X%        X%
+Fuzzy            X%       X%        X%
+```
+
+### 4. Key Findings to Look For
+
+- **Largest main effect**: Which factor matters most?
+- **Significant interactions**: Do effects depend on other factors?
+- **Overfitting patterns**: DETAILED high dev, low val?
+- **Hints threshold**: At what specificity do hints stop mattering?
+- **Optimal configuration**: Best dev + val + gen combo
 
 Results saved to: `experiment_results/comparison.txt`
