@@ -27,6 +27,9 @@ class ExperimentConfig:
     max_iterations: int = 10
     temperature: float = 1.0
 
+    # Search configuration
+    search_mode: str = "weighted"  # "strict", "weighted", or "fuzzy"
+
     # Generalization metadata
     specificity_level: int = 3  # 1=overfit, 2=semi-specific, 3=general
     assumptions: list[str] = field(default_factory=list)

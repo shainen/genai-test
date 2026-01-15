@@ -26,7 +26,8 @@ def run_agent_with_config(question: str, config: ExperimentConfig) -> tuple[str,
     pdfs_folder = "artifacts/1"
 
     # Initialize toolkit and client
-    toolkit = PDFToolkit(pdfs_folder)
+    search_mode = getattr(config, 'search_mode', 'weighted')  # Default to weighted if not specified
+    toolkit = PDFToolkit(pdfs_folder, search_mode=search_mode)
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY environment variable not set")
@@ -279,7 +280,7 @@ Important instructions:
 - When asked about specific types of rules, use find_part_by_description to determine which PART to search
 - When searching for tables, use 1-2 word searches ONLY (e.g., "hurricane", "base rate")
 - When asked to list items, format as a bulleted list using asterisks (*)
-- For calculations: Always end your response with the final numerical answer on the last line
+- For calculations: Always end your response with the final numerical answer on the last line and round to the nearest dollar
 
 Answer questions completely and accurately.""",
     model="claude-sonnet-4-20250514",
@@ -329,7 +330,39 @@ Answer questions completely and accurately.""",
     ]
 )
 
-# Variation 3: Detailed guidance (most specific)
+# Variation 3: Moderate WITHOUT search hints
+MODERATE_NO_HINTS = ExperimentConfig(
+    name="moderate_no_hints",
+    description="Moderate prompt with formula guidance but without search hints",
+    system_prompt="""You are an insurance document analysis assistant. Answer questions using the available tools.
+
+Important instructions:
+- When asked about specific types of rules (e.g., "rating plan rules"), use find_part_by_description FIRST to determine which PART letter to use
+- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name
+- For calculating premiums: X Premium = Base Rate × Mandatory X Deductible Factor
+  1. Base Rate: Search for base rate tables, extract rate for the peril
+  2. Deductible Factor: Search for deductible factor tables, find table with Policy Form + Coverage A + Applicable Deductible %
+- Always cite specific rule numbers and page numbers when referencing rules
+- If asked to list items, format as a bulleted list using asterisks (*)
+- For calculations: Always end your response with the final numerical answer on the last line (e.g., "The answer is $XXX") and round to the nearest dollar
+
+Answer questions completely and accurately.""",
+    model="claude-sonnet-4-20250514",
+    max_iterations=10,
+    temperature=1.0,
+    specificity_level=2,  # Medium
+    assumptions=[
+        "Documents are organized into PARTs with descriptive names",
+        "Tables are in numbered exhibits",
+        "Calculations follow base_rate × factor pattern"
+    ],
+    expected_fragility=[
+        "May struggle without explicit search hints",
+        "Agent must discover optimal search queries on its own"
+    ]
+)
+
+# Variation 4: Detailed guidance (most specific)
 DETAILED = ExperimentConfig(
     name="detailed",
     description="Detailed prompt with step-by-step instructions (from test_dev_q2_detailed.py)",
@@ -363,7 +396,8 @@ Example for Hurricane Premium:
    - Match: Policy Form, Coverage A Limit, Applicable Hurricane Deductible to find the factor
 5. Calculate: Base Rate × Hurricane Deductible Factor
 
-For calculations: Always end your response with the final numerical answer on the last line (e.g., "The unadjusted Hurricane premium is $XXX")""",
+If asked to list items, format as a bulleted list using asterisks (*)
+For calculations: Always end your response with the final numerical answer on the last line (e.g., "The unadjusted Hurricane premium is $XXX") and round to the nearest dollar""",
     model="claude-sonnet-4-20250514",
     max_iterations=10,
     temperature=1.0,
@@ -382,7 +416,51 @@ For calculations: Always end your response with the final numerical answer on th
 )
 
 
-# Get all variations
+# ============================================================================
+# EXPERIMENTAL VARIATIONS (Search Mode × Prompt)
+# ============================================================================
+# These variations test the interaction between search methodology and prompts
+
+# Helper function to create a variation with a specific search mode
+def create_search_variant(base_config: ExperimentConfig, search_mode: str) -> ExperimentConfig:
+    """Create a copy of a config with a different search mode"""
+    import copy
+    variant = copy.deepcopy(base_config)
+    variant.name = f"{search_mode}_{base_config.name}"
+    variant.description = f"{base_config.description} (search_mode={search_mode})"
+    variant.search_mode = search_mode
+    return variant
+
+# Create 9 experimental variations: 3 search modes × 3 prompt specificity levels
+# STRICT search mode
+STRICT_MINIMAL = create_search_variant(MINIMAL, "strict")
+STRICT_MODERATE = create_search_variant(MODERATE, "strict")
+STRICT_DETAILED = create_search_variant(DETAILED, "strict")
+
+# WEIGHTED search mode (baseline)
+WEIGHTED_MINIMAL = create_search_variant(MINIMAL, "weighted")
+WEIGHTED_MODERATE = create_search_variant(MODERATE, "weighted")
+WEIGHTED_DETAILED = create_search_variant(DETAILED, "weighted")
+
+# FUZZY search mode
+FUZZY_MINIMAL = create_search_variant(MINIMAL, "fuzzy")
+FUZZY_MODERATE = create_search_variant(MODERATE, "fuzzy")
+FUZZY_DETAILED = create_search_variant(DETAILED, "fuzzy")
+
+# Experimental variations for final submission
+EXPERIMENTAL_VARIATIONS = [
+    STRICT_MINIMAL,
+    STRICT_MODERATE,
+    STRICT_DETAILED,
+    WEIGHTED_MINIMAL,
+    WEIGHTED_MODERATE,
+    WEIGHTED_DETAILED,
+    FUZZY_MINIMAL,
+    FUZZY_MODERATE,
+    FUZZY_DETAILED
+]
+
+# Original variations (kept for backwards compatibility)
 ALL_VARIATIONS = [
     MINIMAL,
     MODERATE,

@@ -9,7 +9,7 @@ import argparse
 from pathlib import Path
 
 from experiment_harness import ExperimentHarness
-from agent_variations import ALL_VARIATIONS, run_agent_with_config
+from agent_variations import ALL_VARIATIONS, EXPERIMENTAL_VARIATIONS, run_agent_with_config
 from question_bank import get_questions_by_category, get_all_questions
 
 
@@ -38,20 +38,28 @@ def main():
         default="experiment_results",
         help="Directory to save results"
     )
+    parser.add_argument(
+        "--experimental",
+        action="store_true",
+        help="Use EXPERIMENTAL_VARIATIONS (6 search mode × prompt variations) instead of ALL_VARIATIONS"
+    )
 
     args = parser.parse_args()
 
     # Initialize harness
     harness = ExperimentHarness(results_dir=args.results_dir)
 
+    # Choose variation set
+    variation_set = EXPERIMENTAL_VARIATIONS if args.experimental else ALL_VARIATIONS
+
     # Select variations to run
     if args.variations:
-        variations = [v for v in ALL_VARIATIONS if v.name in args.variations]
+        variations = [v for v in variation_set if v.name in args.variations]
         if not variations:
             print(f"Error: No variations found matching {args.variations}")
             return
     else:
-        variations = ALL_VARIATIONS
+        variations = variation_set
 
     # Get questions
     questions = []

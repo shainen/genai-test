@@ -14,16 +14,21 @@ import os
 class PDFToolkit:
     """Collection of tools for the agent to interact with PDF data"""
 
-    def __init__(self, pdfs_folder: str, use_cache: bool = True):
+    def __init__(self, pdfs_folder: str, use_cache: bool = True, search_mode: str = "weighted"):
         """
         Initialize the toolkit with PDFs from a folder.
 
         Args:
             pdfs_folder: Path to folder containing PDFs
             use_cache: Whether to use caching (default: True)
+            search_mode: Search strictness mode (default: "weighted")
+                - "strict": All query words must be present (high precision)
+                - "weighted": Current balanced approach (default)
+                - "fuzzy": Any query words present (low precision, high recall)
         """
         self.pdfs_folder = pdfs_folder
         self.use_cache = use_cache
+        self.search_mode = search_mode
         self._rules_chunks: Optional[List[TextChunk]] = None
         self._rate_chunks: Optional[List[TextChunk]] = None
         self._tables: Optional[List[TableData]] = None
@@ -113,27 +118,55 @@ class PDFToolkit:
         if document_filter:
             chunks = [c for c in chunks if document_filter.lower() in c.source_document.lower()]
 
-        # Simple keyword matching (could be enhanced with embeddings)
+        # Keyword matching with different strictness modes
         query_lower = query.lower()
+        query_words = query_lower.split()
         scored_chunks = []
 
         for chunk in chunks:
             score = 0
+            title = chunk.metadata.get('rule_title', '').lower()
+            content = chunk.content.lower()
+            rule_section = chunk.metadata.get('rule_section', '').lower()
+
+            # STRICT mode: All query words must be present
+            if self.search_mode == "strict":
+                all_present = all(
+                    word in title or word in content or word in rule_section
+                    for word in query_words
+                )
+                if not all_present:
+                    continue  # Skip this chunk if not all words present
+
+            # FUZZY mode: Any query word matches
+            # WEIGHTED mode: Current default behavior
+            # Both calculate scores the same way, but fuzzy is more permissive
 
             # Check title match
-            title = chunk.metadata.get('rule_title', '').lower()
             if query_lower in title:
                 score += 10
+            elif self.search_mode == "fuzzy":
+                # Award points for individual word matches
+                for word in query_words:
+                    if word in title:
+                        score += 3
 
             # Check content match
-            content = chunk.content.lower()
             if query_lower in content:
                 score += content.count(query_lower)
+            elif self.search_mode == "fuzzy":
+                # Award points for individual word matches
+                for word in query_words:
+                    score += content.count(word) * 0.5
 
             # Check rule section match
-            rule_section = chunk.metadata.get('rule_section', '').lower()
             if query_lower in rule_section:
                 score += 5
+            elif self.search_mode == "fuzzy":
+                # Award points for individual word matches
+                for word in query_words:
+                    if word in rule_section:
+                        score += 1
 
             if score > 0:
                 scored_chunks.append((score, chunk))
@@ -363,29 +396,52 @@ class PDFToolkit:
 
         # Score all tables based on description match in page text
         description_lower = description.lower()
+        desc_words = description_lower.split()
         scored_tables = []
 
         for table in tables:
             score = 0
             page_text_lower = table.page_text.lower()
+            headers_text = ' '.join(str(h) if h else '' for h in table.headers).lower()
+
+            # STRICT mode: All query words must be present in page text or headers
+            if self.search_mode == "strict":
+                all_present = all(
+                    word in page_text_lower or word in headers_text
+                    for word in desc_words
+                )
+                if not all_present:
+                    continue  # Skip this table if not all words present
 
             # Check if description appears in page text
             if description_lower in page_text_lower:
                 score += 100
+            elif self.search_mode == "fuzzy":
+                # Award points for individual word matches
+                for word in desc_words:
+                    if len(word) > 2:
+                        score += page_text_lower.count(word) * 10
 
-            # Word-by-word matching
-            desc_words = description_lower.split()
-            for word in desc_words:
-                if len(word) > 2 and word in page_text_lower:
-                    score += 10
+            # Word-by-word matching (for weighted and fuzzy modes)
+            if self.search_mode in ["weighted", "fuzzy"]:
+                for word in desc_words:
+                    if len(word) > 2 and word in page_text_lower:
+                        score += 10
 
             # Also check headers for relevance
-            headers_text = ' '.join(str(h) if h else '' for h in table.headers).lower()
             if description_lower in headers_text:
                 score += 50
-            for word in desc_words:
-                if len(word) > 2 and word in headers_text:
-                    score += 5
+            elif self.search_mode == "fuzzy":
+                # Award points for individual word matches
+                for word in desc_words:
+                    if len(word) > 2:
+                        score += headers_text.count(word) * 5
+
+            # Word-by-word matching in headers (for weighted and fuzzy modes)
+            if self.search_mode in ["weighted", "fuzzy"]:
+                for word in desc_words:
+                    if len(word) > 2 and word in headers_text:
+                        score += 5
 
             if score > 0:
                 scored_tables.append((score, table))
