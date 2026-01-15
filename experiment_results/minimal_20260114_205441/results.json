@@ -1,0 +1,421 @@
+[
+  {
+    "config_name": "minimal",
+    "question_id": "DEV_Q1",
+    "question_text": "List all rating plan rules",
+    "answer": "Here are all the rating plan rules from PART C:\n\n* Limits of Liability and Coverage Relationships\n* Rating Perils\n* Base Rates\n* Policy Type Factor\n* Policy Tier Guidelines\n* Amount of Insurance / Deductibles\n* Hurricane Deductibles\n* Windstorm/Hail Deductibles\n* Policy Territory Determination\n* Distance to Coast Factor\n* Public Protection Class Factors\n* Age of Home Factor\n* Year Built Factor\n* Account Multi-Policy Discount\n* Roof Type Factor\n* Dwelling Usage Factor\n* Increased Limits\n* Protective Device Discounts\n* Affinity Discount\n* Association Discount\n* Oil Tank Factors\n* Pool Factor\n* Trampoline Factors\n* Roof Condition Factor\n* Tree Overhang Factor\n* Solar Panel Factor\n* Yard Debris Factor\n* Umbrella Coverage Factor\n* Secondary Heating Source Factor\n* Windstorm Mitigation Discount\n* Endorsement Combination Discount\n* Loss History Rating\n* Claims Free Discount\n* Underwriting Experience\n* Minimum Premium",
+    "expected_answer": "* Limits of Liability and Coverage Relationships\n* Rating Perils\n* Base Rates\n* Policy Type Factor\n* Policy Tier Guidelines\n* Amount of Insurance / Deductibles\n* Hurricane Deductibles\n* Windstorm / Hail Deductibles\n* Policy Territory Determination\n* Distance to Coast Factor\n* Public Protection Class Factors\n* Age of Home Factor\n* Year Built Factor\n* Account Discount\n* Roof Type Factor\n* Dwelling Usage Factor\n* Increased Limits\n* Protective Device Discount\n* Affinity Discount\n* Association Discount\n* Oil Tank Factor\n* Pool Factor\n* Trampoline Factor\n* Roof Condition Factor\n* Tree Overhang Factor\n* Solar Panel Factor\n* Secondary Heating Source Factor\n* Windstorm Mitigation Discounts\n* Endorsement Combination Discount\n* Loss History Rating\n* Claims Free Discount\n* Underwriting Experience\n* Minimum Premium",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 9.23727297782898,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "rating plan"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "C"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:49:17.007108"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "DEV_Q2",
+    "question_text": "Using the Base Rate and the applicable Mandatory Hurricane Deductible Factor, calculate the unadjusted Hurricane premium for an HO3 policy with a $750,000 Coverage A limit located 3,000 feet from the coast in a Coastline Neighborhood.",
+    "answer": "Unable to answer question within iteration limit.",
+    "expected_answer": "$604",
+    "correct": false,
+    "iterations": 10,
+    "tool_calls": 10,
+    "tokens_used": null,
+    "latency_seconds": 42.90490508079529,
+    "trace": {
+      "iterations": 10,
+      "tool_calls": 10,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rate HO3"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane deductible factor"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "coastline neighborhood"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rate"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 1",
+            "description": "base rates"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 1",
+            "search_criteria": {},
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 1"
+          }
+        },
+        {
+          "iteration": 8,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 9,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            },
+            "return_column": "Applicable\\nHurricane\\nDeductible"
+          }
+        },
+        {
+          "iteration": 10,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 6"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:49:59.912390"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "VAL_Q1",
+    "question_text": "List all general rules",
+    "answer": "Here are all the general rules from Part B:\n\n* CHANGE OF RESIDENCE PREMISES\n* Small Premium Adjustements\n* CANCELLATIONS\n* NON-RENEWALS\n* Interpolation\n* POLICY PERIODTERM (All forms)\n* Whole Dollar Premium Rule\n* Coverage Limit Factors\n* Protection Classification\n* Financial Merit Rule",
+    "expected_answer": "* CHANGE OF RESIDENCE PREMISES\n* Small Premium Adjustements\n* CANCELLATIONS\n* NON-RENEWALS\n* Interpolation\n* POLICY PERIODTERM (All forms)\n* Whole Dollar Premium Rule\n* Coverage Limit Factors\n* Protection Classification\n* Financial Merit Rule",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 26.628430128097534,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "general rules"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "B"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:50:26.541034"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "VAL_Q2",
+    "question_text": "List all optional coverage rules",
+    "answer": "Here are all the optional coverage rules from the Connecticut Homeowner's insurance manual:\n\n**PART F - Coverage A, B, C, D, E Optional Coverage Rules:**\n* Coverage C \u2013 Personal Property Increased Limits for Personal\n* Coverage D \u2013 Loss of Use \u2013 Increased Limits\n* Guaranteed Replacement Cost Coverage (Dwelling) \u2013 (HO470CT)\n* Personal Property Replacement Cost Loss Settlement (HO 04 90)\n* Section II \u2013 Basic and Increased Limits\n* Special Personal Property Coverage (HC -15)\n* Special Personal Property Coverage (HO 05 24) \u2013 use with Form\n* Specified Additional Amount of Insurance for Coverage A \u2013\n* Special Loss Settlement (HO 04 56)\n* Structures Rented to Others \u2013 Residence Premises (HO 04 40)\n* Unit Owners Coverage A \u2013 Basic and Increased Limits\n* Unit-Owners Coverage C Special Coverage (HO 17 31)\n* Unit-Owners Coverage A Special Coverage (HO 17 32)\n\n**PART G - Additional Optional Coverages:**\n* Additional Insured \u2013 Residence Premises (HO 04 41)\n* Additional Insured \u2013 Student Living Away From the Residence\n* Additional Interests \u2013 Residence Premises (HO 04 10)\n* Additional Residence Rented to Others 1, 2, 3, or 4 Families (HO\n* Building Additions and Alterations \u2013 Increased Limit (HO 04 51)\n* Business Pursuits (HO 24 71)\n* Credit Card, Electronic Fund Transfer Card or Access Device,\n* Computer Coverage (HO 04 14)\n* Coverage C Increased Special Limits of Liability (HO 04 65, HO\n* Earthquake Coverage (HO 04 54)\n* Extended Theft Coverage for Residence Premises Occasionally\n* Identity Fraud Expense Coverage (HC455 CT)\n* Increased Limits on Business Property (HO 04 12)\n* Incidental Farming Personal Liability (HC 2472)\n* Earthquake Loss Assessment Coverage (HO 04 36)\n* Water Back-Up And Sump Discharge or Overflow (HC 095 CT)\n* Livestock Collision Coverage (HO 04 52)\n* Ordinance Or Law Increased Amount of Coverage (HO 04 77)\n* Other Insured Locations Occupied by the Insured\n* Permitted Incidental Occupancies, - Residence Premises (HO 04\n* Personal Injury (HO 24 79)\n* Refrigerated Property Coverage (HC 04 98 CT)\n* Replacement Cost Loss Settlement for Certain Non-Building\n* Scheduled Personal Property (HO 461 CW)\n* Loss Assessment Coverage (HO 04 35)\n* Theft of Building Materials (F827 CT)\n* Unit-Owners Rental To Others (HO 17 33)\n* Valuable Possessions Coverage \u2013 (HC 885)\n* Watercraft Liability (HO 24 75)",
+    "expected_answer": "* Coverage C \u2013 Personal Property Increased Limits for Personal\n* Coverage D \u2013 Loss of Use \u2013 Increased Limits\n* Guaranteed Replacement Cost Coverage (Dwelling) \u2013 (HO470CT)\n* Personal Property Replacement Cost Loss Settlement (HO 04 90)\n* Section II \u2013 Basic and Increased Limits\n* Special Personal Property Coverage (HC -15)\n* Special Personal Property Coverage (HO 05 24) \u2013 use with Form\n* Specified Additional Amount of Insurance for Coverage A \u2013\n* Special Loss Settlement",
+    "correct": true,
+    "iterations": 4,
+    "tool_calls": 3,
+    "tokens_used": null,
+    "latency_seconds": 17.960773944854736,
+    "trace": {
+      "iterations": 4,
+      "tool_calls": 3,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "optional coverages"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "G"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "F"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:50:44.502098"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "VAL_Q3",
+    "question_text": "What is the Hurricane base rate for HO3 policies?",
+    "answer": "Perfect! I found the Hurricane base rate for HO3 policies. From Exhibit 1 (page 4), which shows the base rates by coverage type, I can see that:\n\n**The Hurricane base rate for HO3 policies is $293.**\n\nThis appears in the base rates table which shows the rates for different coverage types:\n- Fire: $172\n- Water Non-Weather: $312  \n- Water Weather: $169\n- Wind/Hail: $282\n- **Hurricane: $293**\n- Liability: $42\n- Other: $110\n- Theft: $5\n\n**$293**",
+    "expected_answer": "$293",
+    "correct": true,
+    "iterations": 6,
+    "tool_calls": 5,
+    "tokens_used": null,
+    "latency_seconds": 40.709885120391846,
+    "trace": {
+      "iterations": 6,
+      "tool_calls": 5,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane base rate HO3"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 1",
+            "description": "base rates by coverage type"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 1",
+            "search_criteria": {},
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane base"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 1"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:51:25.212123"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "VAL_Q4",
+    "question_text": "Calculate the unadjusted Fire premium for an HO3 policy with a $750,000 Coverage A limit and a 2% deductible.",
+    "answer": "Unable to answer question within iteration limit.",
+    "expected_answer": "$354.56",
+    "correct": false,
+    "iterations": 10,
+    "tool_calls": 10,
+    "tokens_used": null,
+    "latency_seconds": 161.61703300476074,
+    "trace": {
+      "iterations": 10,
+      "tool_calls": 10,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "HO3 base rates"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "fire base rates"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 1"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "deductible factors"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000",
+              "Coverage\nDeductible": "2%"
+            },
+            "return_column": "Fire"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "750000",
+              "Coverage\nDeductible": "2%"
+            },
+            "return_column": "Fire"
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "description": "coverage A limits around $750,000"
+          }
+        },
+        {
+          "iteration": 8,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 4"
+          }
+        },
+        {
+          "iteration": 9,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Coverage A\nLimit": "$750,000"
+            }
+          }
+        },
+        {
+          "iteration": 10,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Coverage\nDeductible": "2%"
+            }
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:54:06.829308"
+  },
+  {
+    "config_name": "minimal",
+    "question_id": "VAL_Q5",
+    "question_text": "Find the hurricane deductible factor for an HO3 policy with $500,000 Coverage A and a 5% deductible.",
+    "answer": "The hurricane deductible factor for an HO3 policy with $500,000 Coverage A and a 5% deductible is **1.216**.",
+    "expected_answer": "1.216",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 34.66153311729431,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane deductible"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$500,000",
+              "Applicable\nHurricane\nDeductible": "5%"
+            },
+            "return_column": "Hurricane"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-14T20:54:41.490971"
+  }
+]

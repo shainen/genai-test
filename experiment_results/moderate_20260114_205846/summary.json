@@ -1,0 +1,14 @@
+{
+  "config_name": "moderate",
+  "total_questions": 7,
+  "correct": 6,
+  "incorrect": 1,
+  "accuracy": 0.8571428571428571,
+  "dev_accuracy": 1.0,
+  "val_accuracy": 0.8,
+  "holdout_accuracy": 0.0,
+  "avg_iterations": 5.0,
+  "avg_tool_calls": 4.142857142857143,
+  "avg_latency": 34.97932287624904,
+  "generalization_score": 0.4
+}

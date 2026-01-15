@@ -309,10 +309,9 @@ Important instructions:
 - For calculating premiums: X Premium = Base Rate × Mandatory X Deductible Factor
   1. Base Rate: Search "base rate", extract rate for the peril
   2. Deductible Factor: Search "X deductible", find table with Policy Form + Coverage A + Applicable Deductible %
-  3. If deductible % not given but location mentioned (coastal areas), try 2%
 - Always cite specific rule numbers and page numbers when referencing rules
 - If asked to list items, format as a bulleted list using asterisks (*)
-- For calculations: Always end your response with the final numerical answer on the last line (e.g., "The answer is $XXX")
+- For calculations: Always end your response with the final numerical answer on the last line (e.g., "The answer is $XXX") and round to the nearest dollar
 
 Answer questions completely and accurately.""",
     model="claude-sonnet-4-20250514",
