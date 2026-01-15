@@ -1,0 +1,14 @@
+{
+  "config_name": "fuzzy_minimal_no_hints",
+  "total_questions": 10,
+  "correct": 5,
+  "incorrect": 5,
+  "accuracy": 0.5,
+  "dev_accuracy": 0.5,
+  "val_accuracy": 0.6,
+  "holdout_accuracy": 0.3333333333333333,
+  "avg_iterations": 5.1,
+  "avg_tool_calls": 4.3,
+  "avg_latency": 39.37812964916229,
+  "generalization_score": 0.9333333333333333
+}

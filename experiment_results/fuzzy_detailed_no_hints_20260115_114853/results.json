@@ -1,0 +1,596 @@
+[
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "DEV_Q1",
+    "question_text": "List all rating plan rules",
+    "answer": "Here are all the rating plan rules from PART C:\n\n* Limits of Liability and Coverage Relationships\n* Rating Perils\n* Base Rates\n* Policy Type Factor\n* Policy Tier Guidelines\n* Amount of Insurance / Deductibles\n* Hurricane Deductibles\n* Windstorm/Hail Deductibles\n* Policy Territory Determination\n* Distance to Coast Factor\n* Public Protection Class Factors\n* Age of Home Factor\n* Year Built Factor\n* Account Multi-Policy Discount\n* Roof Type Factor\n* Dwelling Usage Factor\n* Increased Limits\n* Protective Device Discounts\n* Affinity Discount\n* Association Discount\n* Oil Tank Factors\n* Pool Factor\n* Trampoline Factors\n* Roof Condition Factor\n* Tree Overhang Factor\n* Solar Panel Factor\n* Yard Debris Factor\n* Umbrella Coverage Factor\n* Secondary Heating Source Factor\n* Windstorm Mitigation Discount\n* Endorsement Combination Discount\n* Loss History Rating\n* Claims Free Discount\n* Underwriting Experience\n* Minimum Premium",
+    "expected_answer": "* Limits of Liability and Coverage Relationships\n* Rating Perils\n* Base Rates\n* Policy Type Factor\n* Policy Tier Guidelines\n* Amount of Insurance / Deductibles\n* Hurricane Deductibles\n* Windstorm / Hail Deductibles\n* Policy Territory Determination\n* Distance to Coast Factor\n* Public Protection Class Factors\n* Age of Home Factor\n* Year Built Factor\n* Account Discount\n* Roof Type Factor\n* Dwelling Usage Factor\n* Increased Limits\n* Protective Device Discount\n* Affinity Discount\n* Association Discount\n* Oil Tank Factor\n* Pool Factor\n* Trampoline Factor\n* Roof Condition Factor\n* Tree Overhang Factor\n* Solar Panel Factor\n* Secondary Heating Source Factor\n* Windstorm Mitigation Discounts\n* Endorsement Combination Discount\n* Loss History Rating\n* Claims Free Discount\n* Underwriting Experience\n* Minimum Premium",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 13.090212106704712,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "rating plan"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "C"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:40:00.045844"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "DEV_Q2",
+    "question_text": "Using the Base Rate and the applicable Mandatory Hurricane Deductible Factor, calculate the unadjusted Hurricane premium for an HO3 policy with a $750,000 Coverage A limit located 3,000 feet from the coast in a Coastline Neighborhood.",
+    "answer": "Based on my analysis:\n\n**Hurricane Premium Calculation:**\n- **Base Rate (Hurricane)**: 1.000 (from Exhibit 4 - Base Rates table)\n- **Location**: 3,000 feet from coast in Coastline Neighborhood\n- **Applicable Hurricane Deductible**: 2% (per rules - properties in Coastline Neighborhoods >2,500 feet from coast get 2% deductible)\n- **Mandatory Hurricane Deductible Factor**: 2.061 (from Exhibit 6 - Hurricane Deductible Factor table)\n\n**Calculation**: 1.000 \u00d7 2.061 = 2.061\n\nThe unadjusted Hurricane premium is $2.",
+    "expected_answer": "$604",
+    "correct": false,
+    "iterations": 8,
+    "tool_calls": 7,
+    "tokens_used": null,
+    "latency_seconds": 85.25581383705139,
+    "trace": {
+      "iterations": 8,
+      "tool_calls": 7,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates for HO3"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "search_rules",
+          "input": {
+            "query": "hurricane deductible coastline neighborhood distance coast"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane deductible factor"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "description": "hurricane deductible factor table with hurricane deductible percentages"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000",
+              "Applicable\nHurricane\nDeductible": "2%"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "calculate",
+          "input": {
+            "expression": "1.000 * 2.061"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:41:25.301856"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "VAL_Q1",
+    "question_text": "List all general rules",
+    "answer": "Here are all the General Rules from PART B:\n\n* CHANGE OF RESIDENCE PREMISES\n* Small Premium Adjustements\n* CANCELLATIONS\n* NON-RENEWALS\n* Interpolation\n* POLICY PERIODTERM (All forms)\n* Whole Dollar Premium Rule\n* Coverage Limit Factors\n* Protection Classification\n* Financial Merit Rule",
+    "expected_answer": "* CHANGE OF RESIDENCE PREMISES\n* Small Premium Adjustements\n* CANCELLATIONS\n* NON-RENEWALS\n* Interpolation\n* POLICY PERIODTERM (All forms)\n* Whole Dollar Premium Rule\n* Coverage Limit Factors\n* Protection Classification\n* Financial Merit Rule",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 20.55451273918152,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "general rules"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "B"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:41:45.856550"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "VAL_Q2",
+    "question_text": "List all optional coverage rules",
+    "answer": "Here are all the optional coverage rules from the manual:\n\n**PART F - Coverage A, B, C, D, E \u2013 Optional:**\n* Coverage C \u2013 Personal Property Increased Limits for Personal\n* Coverage D \u2013 Loss of Use \u2013 Increased Limits\n* Guaranteed Replacement Cost Coverage (Dwelling) \u2013 (HO470CT)\n* Personal Property Replacement Cost Loss Settlement (HO 04 90)\n* Section II \u2013 Basic and Increased Limits\n* Special Personal Property Coverage (HC -15)\n* Special Personal Property Coverage (HO 05 24) \u2013 use with Form\n* Specified Additional Amount of Insurance for Coverage A \u2013\n* Special Loss Settlement (HO 04 56)\n* Structures Rented to Others \u2013 Residence Premises (HO 04 40)\n* Unit Owners Coverage A \u2013 Basic and Increased Limits\n* Unit-Owners Coverage C Special Coverage (HO 17 31)\n* Unit-Owners Coverage A Special Coverage (HO 17 32)\n\n**PART G - Additional Optional Coverages:**\n* Additional Insured \u2013 Residence Premises (HO 04 41)\n* Additional Insured \u2013 Student Living Away From the Residence\n* Additional Interests \u2013 Residence Premises (HO 04 10)\n* Additional Residence Rented to Others 1, 2, 3, or 4 Families (HO\n* Building Additions and Alterations \u2013 Increased Limit (HO 04 51)\n* Business Pursuits (HO 24 71)\n* Credit Card, Electronic Fund Transfer Card or Access Device,\n* Computer Coverage (HO 04 14)\n* Coverage C Increased Special Limits of Liability (HO 04 65, HO\n* Earthquake Coverage (HO 04 54)\n* Extended Theft Coverage for Residence Premises Occasionally\n* Identity Fraud Expense Coverage (HC455 CT)\n* Increased Limits on Business Property (HO 04 12)\n* Incidental Farming Personal Liability (HC 2472)\n* Earthquake Loss Assessment Coverage (HO 04 36)\n* Water Back-Up And Sump Discharge or Overflow (HC 095 CT)\n* Livestock Collision Coverage (HO 04 52)\n* Ordinance Or Law Increased Amount of Coverage (HO 04 77)\n* Other Insured Locations Occupied by the Insured\n* Permitted Incidental Occupancies, - Residence Premises (HO 04\n* Personal Injury (HO 24 79)\n* Refrigerated Property Coverage (HC 04 98 CT)\n* Replacement Cost Loss Settlement for Certain Non-Building\n* Scheduled Personal Property (HO 461 CW)\n* Loss Assessment Coverage (HO 04 35)\n* Theft of Building Materials (F827 CT)\n* Unit-Owners Rental To Others (HO 17 33)\n* Valuable Possessions Coverage \u2013 (HC 885)\n* Watercraft Liability (HO 24 75)",
+    "expected_answer": "* Coverage C \u2013 Personal Property Increased Limits for Personal\n* Coverage D \u2013 Loss of Use \u2013 Increased Limits\n* Guaranteed Replacement Cost Coverage (Dwelling) \u2013 (HO470CT)\n* Personal Property Replacement Cost Loss Settlement (HO 04 90)\n* Section II \u2013 Basic and Increased Limits\n* Special Personal Property Coverage (HC -15)\n* Special Personal Property Coverage (HO 05 24) \u2013 use with Form\n* Specified Additional Amount of Insurance for Coverage A \u2013\n* Special Loss Settlement",
+    "correct": true,
+    "iterations": 4,
+    "tool_calls": 3,
+    "tokens_used": null,
+    "latency_seconds": 25.02024483680725,
+    "trace": {
+      "iterations": 4,
+      "tool_calls": 3,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "optional coverages"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "G"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "F"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:42:10.877079"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "VAL_Q3",
+    "question_text": "What is the Hurricane base rate for HO3 policies?",
+    "answer": "Based on my search of the rate tables, I found that the Hurricane base rates for HO3 policies are found in **Exhibit 3** and they vary by tier:\n\nThe Hurricane base rates for HO3 policies range from:\n* **Tier 1**: 0.01\n* **Tier 2**: 0.02  \n* **Tier 10**: 0.10\n* **Tier 100**: 1.00\n\nThe base rates follow a pattern where each tier corresponds to that tier number divided by 100 (e.g., Tier 1 = 0.01, Tier 2 = 0.02, etc.). The specific Hurricane base rate to use would depend on the tier assigned to the particular risk being rated.",
+    "expected_answer": "$293",
+    "correct": false,
+    "iterations": 9,
+    "tool_calls": 8,
+    "tokens_used": null,
+    "latency_seconds": 84.24158382415771,
+    "trace": {
+      "iterations": 9,
+      "tool_calls": 8,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates for HO3 hurricane"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates HO3"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates hurricane"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 3",
+            "description": "base rates by tier for HO3 hurricane"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 3",
+            "search_criteria": {
+              "Policy Form": "HO3"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 3",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Tier": "2"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 3",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Tier": "10"
+            },
+            "return_column": "Hurricane"
+          }
+        },
+        {
+          "iteration": 8,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 3",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Tier": "100"
+            },
+            "return_column": "Hurricane"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:43:35.118803"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "VAL_Q4",
+    "question_text": "Calculate the unadjusted Fire premium for an HO3 policy with a $750,000 Coverage A limit and a 2% deductible.",
+    "answer": "Unable to answer question within iteration limit.",
+    "expected_answer": "$354.56",
+    "correct": false,
+    "iterations": 10,
+    "tool_calls": 10,
+    "tokens_used": null,
+    "latency_seconds": 94.22262191772461,
+    "trace": {
+      "iterations": 10,
+      "tool_calls": 10,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates fire"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 6",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            },
+            "return_column": "Fire"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "fire deductible factor"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000",
+              "Coverage\nDeductible": "2%"
+            },
+            "return_column": "Fire"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "description": "deductible options for $750,000 coverage"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            }
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "calculate",
+          "input": {
+            "expression": "750000 * 0.02"
+          }
+        },
+        {
+          "iteration": 8,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000",
+              "Coverage\nDeductible": "$15,000"
+            },
+            "return_column": "Fire"
+          }
+        },
+        {
+          "iteration": 9,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 4",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$750,000"
+            }
+          }
+        },
+        {
+          "iteration": 10,
+          "tool": "search_rules",
+          "input": {
+            "query": "fire deductible percentage"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:45:09.341568"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "VAL_Q5",
+    "question_text": "Find the hurricane deductible factor for an HO3 policy with $500,000 Coverage A and a 5% deductible.",
+    "answer": "The hurricane deductible factor for an HO3 policy with $500,000 Coverage A and a 5% deductible is **1.000**.",
+    "expected_answer": "1.216",
+    "correct": false,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 18.8861722946167,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "hurricane deductible factor"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_value_in_table",
+          "input": {
+            "exhibit_name": "Exhibit 7",
+            "search_criteria": {
+              "Policy Form": "HO3",
+              "Coverage A\nLimit": "$500,000",
+              "Applicable\nWind/Hail\nDeductible": "5%"
+            },
+            "return_column": "Hurricane"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:45:28.227853"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "HOLD_Q1",
+    "question_text": "How many rules are in PART B (General Rules)?",
+    "answer": "Based on the results, PART B (General Rules) contains **10 rules**:\n\n* CHANGE OF RESIDENCE PREMISES\n* Small Premium Adjustements  \n* CANCELLATIONS\n* NON-RENEWALS\n* Interpolation\n* POLICY PERIODTERM (All forms)\n* Whole Dollar Premium Rule\n* Coverage Limit Factors\n* Protection Classification\n* Financial Merit Rule",
+    "expected_answer": "10",
+    "correct": true,
+    "iterations": 3,
+    "tool_calls": 2,
+    "tokens_used": null,
+    "latency_seconds": 14.613785982131958,
+    "trace": {
+      "iterations": 3,
+      "tool_calls": 2,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_part_by_description",
+          "input": {
+            "description": "general rules"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "list_all_rules",
+          "input": {
+            "part_filter": "B"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:45:42.841753"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "HOLD_Q2",
+    "question_text": "Calculate the unadjusted Water Weather premium for an HO3 policy with a $300,000 Coverage A limit and a 2% deductible.",
+    "answer": "Unable to answer question within iteration limit.",
+    "expected_answer": "$348.31",
+    "correct": false,
+    "iterations": 10,
+    "tool_calls": 10,
+    "tokens_used": null,
+    "latency_seconds": 155.10821795463562,
+    "trace": {
+      "iterations": 10,
+      "tool_calls": 10,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "base rates for HO3"
+          }
+        },
+        {
+          "iteration": 2,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "water weather deductible factor"
+          }
+        },
+        {
+          "iteration": 3,
+          "tool": "search_rules",
+          "input": {
+            "query": "water weather deductible factor"
+          }
+        },
+        {
+          "iteration": 4,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "water weather deductible"
+          }
+        },
+        {
+          "iteration": 5,
+          "tool": "search_rules",
+          "input": {
+            "query": "water weather deductible percentage"
+          }
+        },
+        {
+          "iteration": 6,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "water weather deductible factor table"
+          }
+        },
+        {
+          "iteration": 7,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "water weather percentage deductible 2%"
+          }
+        },
+        {
+          "iteration": 8,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "exhibit water weather 2 percent factor"
+          }
+        },
+        {
+          "iteration": 9,
+          "tool": "find_table_by_description",
+          "input": {
+            "description": "water weather deductible factor 2% HO3 300000"
+          }
+        },
+        {
+          "iteration": 10,
+          "tool": "extract_table",
+          "input": {
+            "exhibit_name": "Exhibit 5",
+            "description": "water weather deductible factor table"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:48:17.950149"
+  },
+  {
+    "config_name": "fuzzy_detailed_no_hints",
+    "question_id": "HOLD_Q3",
+    "question_text": "What does the Policy Territory Determination rule specify?",
+    "answer": "The Policy Territory Determination rule (Rule C-9) specifies the following key requirements:\n\n**Territory Determination Method:**\n* Territory is determined by the zip code, city, and county where the dwelling is located\n* The exact dwelling address is required\n\n**Address Requirements:**\n* When an exact dwelling address doesn't exist, the legal description of the property as it appears on the deed OR the address used by a local utility company is required\n* Rural route and box number addresses are unacceptable\n\n**Rate Stability:**\n* An insured's rates shall not be changed solely because the United States Postal Service (USPS) changed a zip code\n\n**Territory Boundaries:**\n* The physical boundaries of a rating territory are determined based on the boundaries for the zip code at the time when ACIC filed the territory definitions\n* Territory boundaries can only be adjusted when a filing is made to do so\n\n**Territory Usage:**\n* Territory assignments are based on zip code, city, and county which determine the territory factor\n* Territories for Group 1 Perils and Group 2 Perils are used for Peril Development Subtotal\n* Earthquake Territory is used for endorsement rating if earthquake coverage is requested\n* The Group 1 Territory shall be displayed on the Declarations Page and reported to statistical bureaus\n\n**Reference:**\n* The rule directs users to refer to the Rating Manual for applicable territory factors",
+    "expected_answer": "Territory is determined by the zip code, city, and county where the dwelling is located. The exact dwelling address is required.",
+    "correct": false,
+    "iterations": 2,
+    "tool_calls": 1,
+    "tokens_used": null,
+    "latency_seconds": 35.08745193481445,
+    "trace": {
+      "iterations": 2,
+      "tool_calls": 1,
+      "tool_call_details": [
+        {
+          "iteration": 1,
+          "tool": "search_rules",
+          "input": {
+            "query": "Policy Territory Determination"
+          }
+        }
+      ]
+    },
+    "error": null,
+    "timestamp": "2026-01-15T11:48:53.037777"
+  }
+]

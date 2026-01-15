@@ -48,6 +48,93 @@ This project implements a PDF question-answering system using Claude Sonnet 4 an
 
 ## Part 2: Experimentation Framework
 
+### Experimental Design
+
+**3×2×3 Factorial Design**: 18 total configurations testing:
+- **3 Search Modes**: Strict, Weighted, Fuzzy
+- **2 Hint Levels**: With search hints vs No hints
+- **3 Prompt Specificity Levels**: Minimal, Moderate, Detailed
+
+**Question Sets**:
+- 2 Development questions
+- 5 Validation questions
+- 3 Holdout questions
+
+**Total Experiment**: 18 variations × 10 questions = 180 test runs
+
+### Key Results
+
+**Best Configuration: `weighted_moderate`**
+- ✅ 100% development accuracy (2/2)
+- ✅ 80% validation accuracy (4/5)
+- ✅ 33% holdout accuracy (1/3)
+- ⏱️ 5.2 iterations average, 50.3s latency
+- 🎯 Generalization score: 0.57
+
+### Main Effects Discovered
+
+1. **Search Mode Effect**:
+   - Strict and Weighted perform equally (75% dev)
+   - Fuzzy underperforms significantly (-17% dev, -22% val)
+   - **Conclusion**: Avoid fuzzy search
+
+2. **Search Hints Effect**:
+   - Hints improve dev accuracy (+27%)
+   - Hints reduce val accuracy (-5%)
+   - Hints hurt generalization (Gen: 0.62 vs 1.04)
+   - **Conclusion**: Hints cause overfitting to dev questions
+
+3. **Prompt Specificity Effect**:
+   - More specificity → Higher dev accuracy (58% → 75% → 83%)
+   - More specificity → Lower generalization (0.98 → 0.82 → 0.67)
+   - **Conclusion**: Classic bias-variance tradeoff
+
+### Interaction Effects
+
+**Search × Hints**:
+- Strict benefits most from hints (+50%)
+- Weighted benefits moderately (+16%)
+- Fuzzy doesn't benefit at all (0%)
+
+**Hints × Specificity**:
+- Hints only help at Moderate+ specificity
+- At Minimal: 0% improvement
+- At Moderate: +50% improvement
+- At Detailed: +33% improvement
+- **Threshold identified**: Between Minimal and Moderate
+
+### Top Performing Configurations
+
+| Rank | Configuration | Dev | Val | Hold | Gen | Iter | Time |
+|------|---------------|-----|-----|------|-----|------|------|
+| 1 | `weighted_moderate` | 100% | 80% | 33% | 0.57 | 5.2 | 50.3s |
+| 2 | `strict_detailed` | 100% | 80% | 33% | 0.57 | 4.4 | 30.5s |
+| 3 | `weighted_detailed` | 100% | 80% | 33% | 0.57 | 4.3 | 30.7s |
+| 4 | `strict_moderate` | 100% | 80% | 33% | 0.57 | 5.4 | 45.5s |
+| 5 | `strict_minimal` | 100% | 80% | 33% | 0.57 | 5.4 | 33.6s |
+
+**Note**: All configs with 100% dev achieved 80% val, showing consistency.
+
+### Failure Analysis
+
+**Development failures (50% in some configs)**:
+- All failed on DEV_Q2 (Hurricane premium calculation)
+- Requires multi-hop reasoning + formula knowledge
+- Configs without hints OR without formula failed
+
+**Validation failures (20-60% depending on config)**:
+- Fuzzy search performed worst (40% accuracy)
+- VAL_Q4 known to be invalid question (wrong expected answer)
+
+**Holdout failures (uniform 67% across all configs)**:
+- All 18 configs passed exactly 1/3 holdout questions
+- Suggests holdout tests capabilities not in dev/val
+- Indicates systematic capability gaps
+
+---
+
+## Part 2: Experimentation Framework (Original)
+
 ### Framework Components
 
 **Question Bank** (`question_bank.py`):

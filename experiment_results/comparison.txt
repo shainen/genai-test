@@ -1,0 +1,33 @@
+========================================================================================================================
+VARIATION COMPARISON
+========================================================================================================================
+Variation                      Dev      Val      Hold     Gen      Iter     Time     Rec  
+------------------------------------------------------------------------------------------------------------------------
+strict_minimal                 100%     80%      33%      0.57     5.4      33.6s    ✗    
+strict_minimal_no_hints        50%      60%      33%      0.93     5.8      37.4s    ✗    
+strict_moderate                100%     80%      33%      0.57     5.4      45.5s    ✗    
+strict_moderate_no_hints       50%      80%      33%      1.13     5.6      34.5s    ✗    
+strict_detailed                100%     80%      33%      0.57     4.4      30.5s    ✗    
+strict_detailed_no_hints       50%      80%      33%      1.13     5.4      36.5s    ✗    
+weighted_minimal               50%      80%      33%      1.13     4.6      42.0s    ✗    
+weighted_minimal_no_hints      50%      80%      33%      1.13     5.3      43.8s    ✗    
+weighted_moderate              100%     80%      33%      0.57     5.2      50.3s    ✗    
+weighted_moderate_no_hints     50%      80%      33%      1.13     5.2      42.3s    ✗    
+weighted_detailed              100%     80%      33%      0.57     4.3      30.7s    ✗    
+weighted_detailed_no_hints     100%     60%      33%      0.47     5.1      40.0s    ✗    
+fuzzy_minimal                  50%      40%      33%      0.73     5.3      43.9s    ✗    
+fuzzy_minimal_no_hints         50%      60%      33%      0.93     5.1      39.4s    ✗    
+fuzzy_moderate                 50%      40%      33%      0.73     5.7      54.1s    ✗    
+fuzzy_moderate_no_hints        50%      60%      33%      0.93     4.9      38.5s    ✗    
+fuzzy_detailed                 100%     60%      33%      0.47     5.1      43.9s    ✗    
+fuzzy_detailed_no_hints        50%      40%      33%      0.73     5.5      54.6s    ✗    
+========================================================================================================================
+
+Legend:
+  Dev  = Development accuracy (Q1, Q2)
+  Val  = Validation accuracy (VAL_Q1-Q5)
+  Hold = Hold-out accuracy (HOLD_Q1-Q3)
+  Gen  = Generalization score ((Val+Hold)/2 / Dev)
+  Iter = Average iterations
+  Time = Average latency
+  Rec  = Recommended (✓ if Dev=100%, Val≥80%, Gen≥0.8)

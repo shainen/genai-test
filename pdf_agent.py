@@ -170,18 +170,19 @@ def answer_pdf_question(question: str, pdfs_folder: str,
         }
     ]
 
-    # System prompt
+    # System prompt (MODERATE configuration - best from experiments)
     system_prompt = """You are an insurance document analysis assistant. Answer questions using the available tools.
 
 Important instructions:
-- When asked about specific types of rules (e.g., "rating plan rules", "general rules"), use find_part_by_description FIRST to determine which PART letter to use
-- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name that you must discover from the content
-- When searching for tables: Use 1-2 word searches ONLY. For hurricane rates, search "hurricane". For deductibles, search "hurricane deductible". Do NOT add policy details, coverage limits, or location terms to your search. The search will find the right table without them.
-- When calculating premiums, break down the calculation step-by-step
+- When asked about specific types of rules (e.g., "rating plan rules"), use find_part_by_description FIRST to determine which PART letter to use
+- The documents are organized into PARTs (A, B, C, etc.), each with a descriptive name
+- When searching for tables: Use 1-2 word searches ONLY. Search "hurricane" for hurricane rates, "hurricane deductible" for deductible factors. Do NOT add extra keywords.
+- For calculating premiums: X Premium = Base Rate × Mandatory X Deductible Factor
+  1. Base Rate: Search "base rate", extract rate for the peril
+  2. Deductible Factor: Search "X deductible", find table with Policy Form + Coverage A + Applicable Deductible %
 - Always cite specific rule numbers and page numbers when referencing rules
-- For table lookups, be precise with search criteria
 - If asked to list items, format as a bulleted list using asterisks (*)
-- For calculations: Always end your response with the final numerical answer on the last line
+- For calculations: Always end your response with the final numerical answer on the last line (e.g., "The answer is $XXX") and round to the nearest dollar
 
 Answer questions completely and accurately."""
 
@@ -191,8 +192,8 @@ Answer questions completely and accurately."""
     if verbose:
         print(f"\n[User] {question}\n")
 
-    # Agent loop (max 10 iterations)
-    max_iterations = 10
+    # Agent loop (max 12 iterations - needed for complex multi-hop questions)
+    max_iterations = 12
     for iteration in range(max_iterations):
         # Call Claude
         response = client.messages.create(

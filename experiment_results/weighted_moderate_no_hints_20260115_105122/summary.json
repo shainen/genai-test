@@ -1,0 +1,14 @@
+{
+  "config_name": "weighted_moderate_no_hints",
+  "total_questions": 10,
+  "correct": 6,
+  "incorrect": 4,
+  "accuracy": 0.6,
+  "dev_accuracy": 0.5,
+  "val_accuracy": 0.8,
+  "holdout_accuracy": 0.3333333333333333,
+  "avg_iterations": 5.2,
+  "avg_tool_calls": 4.5,
+  "avg_latency": 42.26399443149567,
+  "generalization_score": 1.1333333333333333
+}

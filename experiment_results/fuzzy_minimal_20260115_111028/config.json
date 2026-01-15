@@ -1,0 +1,19 @@
+{
+  "name": "fuzzy_minimal",
+  "description": "Minimal prompt with basic instructions only (search_mode=fuzzy)",
+  "system_prompt": "You are an insurance document analysis assistant. Answer questions using the available tools.\n\nImportant instructions:\n- When asked about specific types of rules, use find_part_by_description to determine which PART to search\n- When searching for tables, use 1-2 word searches ONLY (e.g., \"hurricane\", \"base rate\")\n- When asked to list items, format as a bulleted list using asterisks (*)\n- For calculations: Always end your response with the final numerical answer on the last line and round to the nearest dollar\n\nAnswer questions completely and accurately.",
+  "model": "claude-sonnet-4-20250514",
+  "max_iterations": 10,
+  "temperature": 1.0,
+  "search_mode": "fuzzy",
+  "specificity_level": 3,
+  "assumptions": [
+    "Documents are organized into PARTs",
+    "Tables are in numbered exhibits"
+  ],
+  "expected_fragility": [
+    "May struggle with complex multi-hop reasoning",
+    "May not know domain-specific patterns"
+  ],
+  "extra_config": {}
+}
