@@ -97,3 +97,13 @@ Results were analyzed using trace inspection rather than raw JSON logs, with Cla
 - Failures caused by sensitivity to keyword selection during search
 
 Final results are summarized in `EXPERIMENT_RESULTS_ANALYSIS.md`. The conclusions are not statistically strong due to the limited number of questions, but they do provide useful qualitative insights into failure modes and tradeoffs, and serve as a prototype for a fuller experiment.
+
+## Limitations and Conclusions
+
+The primary limitation of this work is the small number of ground-truth questions and the synthetic nature of additional evaluation data, which limits the strength of experimental conclusions. This compounds with my own lack of domain knowledge, s.t. design decisions are overly coupled to the two example questions.
+
+That said, this project surfaced patterns that often show-up in RAGs over long, structured documents:
+- Early decisions about how documents are parsed and stored have a large downstream impact. Domain specific considerations should be taken into account.
+- Making domain assumptions explicit in code or tools is more reliable than relying on prompt wording alone, especially when prompts are intentionally varied during testing.
+- Many apparent reasoning failures are actually caused by missing or incomplete context, rather than by the model’s inability to reason.
+- Looking at step-by-step execution traces is critical for understanding failures; summary metrics alone often hide whether an issue comes from search, tool use, or answer construction. Here in particular, using an AI assistant allowed for efficient exploration and debugging.
